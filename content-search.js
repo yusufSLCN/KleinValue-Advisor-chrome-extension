@@ -32,6 +32,12 @@ if (!window.location.pathname.includes('/s-anzeige/')) {
 
 async function addPriceIndicators() {
     try {
+        // Check if StorageManager is available
+        if (!window.StorageManager) {
+            console.error('StorageManager not available');
+            return;
+        }
+        
         const analyzedItems = await window.StorageManager.getItems();
         
         if (!analyzedItems || analyzedItems.length === 0) {
@@ -74,7 +80,12 @@ function injectPriceIndicator(itemElement, analyzedItem) {
     const confidence = estimation.confidence || 70;
     
     // Extract listed price from the item
-    const listedPrice = parseFloat(analyzedItem.price?.replace('€', '').replace(',', '.').trim()) || 0;
+    let listedPrice = 0;
+    if (analyzedItem.price && typeof analyzedItem.price === 'string') {
+        listedPrice = parseFloat(analyzedItem.price.replace('€', '').replace(',', '.').trim()) || 0;
+    } else if (typeof analyzedItem.price === 'number') {
+        listedPrice = analyzedItem.price;
+    }
     
     // Check if it's a bargain (AI price is significantly higher than listed price)
     const isBargain = listedPrice > 0 && aiPrice > listedPrice * 1.2;

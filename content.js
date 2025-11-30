@@ -48,41 +48,123 @@ observer.observe(document.body, {
     subtree: true
 });
 
-function injectAIAnalysisButton() {
-    console.log('🤖 injectAIAnalysisButton called');
+async function showExistingEstimation(titleElement, estimation) {
+    // Check if we already added this - remove to avoid duplicates
+    const existing = document.getElementById('ai-estimate-container');
+    if (existing) {
+        existing.remove();
+    }
     
-    // Check if button already exists
-    if (document.getElementById('ai-analyze-button')) {
-        console.log('🤖 Button already exists, skipping');
+    // Find the price element (same logic as injectAIEstimate)
+    const priceSelectors = [
+        '.ad-price',
+        '[data-qa="price"]',
+        '.price',
+        '.aditem-price',
+        '[class*="price"]'
+    ];
+
+    let priceElement = null;
+    for (const selector of priceSelectors) {
+        priceElement = document.querySelector(selector);
+        if (priceElement) break;
+    }
+
+    if (!priceElement) {
         return;
     }
 
-    // Find the ad title container (typically h1 or .ad-titles)
-    const titleElement = document.querySelector('h1.adtitle') || document.querySelector('.ad-titles h1') || document.querySelector('h1');
-    console.log('🤖 Title element found:', titleElement);
-    
-    if (!titleElement) {
-        console.log('🤖 No title element found - not on an item page');
-        return; // Not on an item page
-function injectAIAnalysisButton() {
-    // Check if button already exists
-    if (document.getElementById('ai-analyze-button')) {
-        return;
+    // Get settings
+    let settings = { confidenceThreshold: 70 };
+    try {
+        settings = await window.StorageManager.getSettings();
+    } catch (e) {
+        console.warn('Could not load settings:', e);
     }
 
-    // Find the ad title container (typically h1 or .ad-titles)
-    const titleElement = document.querySelector('h1.adtitle') || document.querySelector('.ad-titles h1') || document.querySelector('h1');
+    const value = estimation.value;
+    const reasoning = estimation.reasoning;
+    const confidence = estimation.confidence || 70;
+    const threshold = settings.confidenceThreshold || 70;
+    const cost = estimation.estimatedCost;
+    const isError = estimation.error === true;
+
+    // Create AI estimate container - compact inline style (same as injectAIEstimate)
+    const estimateContainer = document.createElement('div');
+    estimateContainer.id = 'ai-estimate-container';
+    estimateContainer.style.cssText = `
+        display: inline-block;
+        margin-left: 15px;
+        padding: 8px 12px;
+        background: linear-gradient(135deg, #f0f8ff 0%, #e1f0ff 100%);
+        border: 2px solid #2196F3;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #1a1a1a;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        position: relative;
+    `;
     
-    if (!titleElement) {
-        return; // Not on an item page
-    }           } else {
-                    console.error('Error checking cached analysis:', error);
-                }
-            });
+    const summaryText = document.createElement('div');
+    summaryText.innerHTML = `🤖 AI Estimate: €${value !== null && value !== undefined ? value.toFixed(0) : 'N/A'} <span style="font-size: 11px; font-weight: normal;">(${confidence}% confidence)</span> <span style="font-size: 10px;">▼</span>`;
+    
+    const reasoningBox = document.createElement('div');
+    reasoningBox.style.cssText = `
+        display: none;
+        margin-top: 8px;
+        padding: 8px;
+        border-top: 1px solid #2196F3;
+        font-size: 12px;
+        font-weight: normal;
+        line-height: 1.5;
+        max-width: 500px;
+        color: #2d2d2d;
+        white-space: normal;
+    `;
+    reasoningBox.innerHTML = `
+        <strong>Reasoning:</strong><br>${reasoning || 'No reasoning provided'}
+        ${estimation.model ? `<br><br><strong>Model:</strong> ${estimation.model}` : ''}
+        ${!isError && cost ? `<br><strong>API Cost:</strong> ${cost.formatted} (${cost.totalTokens} tokens)` : ''}
+    `;
+    
+    estimateContainer.appendChild(summaryText);
+    estimateContainer.appendChild(reasoningBox);
+    
+    let expanded = false;
+    estimateContainer.addEventListener('click', function() {
+        expanded = !expanded;
+        if (expanded) {
+            reasoningBox.style.display = 'block';
+            summaryText.querySelector('span:last-child').textContent = '▲';
+            estimateContainer.style.display = 'block';
+        } else {
+            reasoningBox.style.display = 'none';
+            summaryText.querySelector('span:last-child').textContent = '▼';
+            estimateContainer.style.display = 'inline-block';
         }
-    }).catch(error => {
-        // Silently default to auto-analyze enabled
     });
+
+    // Insert inline next to price
+    priceElement.style.display = 'flex';
+    priceElement.style.alignItems = 'center';
+    priceElement.style.flexWrap = 'wrap';
+    priceElement.appendChild(estimateContainer);
+}
+
+function injectAIAnalysisButton() {
+    // Check if button already exists
+    if (document.getElementById('ai-analyze-button')) {
+        return;
+    }
+
+    // Find the ad title container (typically h1 or .ad-titles)
+    const titleElement = document.querySelector('h1.adtitle') || document.querySelector('.ad-titles h1') || document.querySelector('h1');
+    
+    if (!titleElement) {
+        return; // Not on an item page
+    }
 
     // Create button
     const button = document.createElement('button');
@@ -116,11 +198,14 @@ function injectAIAnalysisButton() {
     window.StorageManager.getItems().then(items => {
         const existingItem = items.find(item => item.url === pageUrl);
 
-        if (existingItem && existingItem.estimation) {
+        if (existingItem && existingItem.estimation && !existingItem.estimation.error) {
             // Item has been analyzed before - update button text and style
             button.innerHTML = '&#128257; Re-analyze';
             button.style.background = 'linear-gradient(45deg, #28a745, #1e7e34)';
             button.title = 'This item has already been analyzed. Click to re-analyze.';
+            
+            // Show the existing AI estimation
+            showExistingEstimation(titleElement, existingItem.estimation);
         }
     }).catch(error => {
         if (error.message.includes('Extension context invalidated')) {
@@ -926,104 +1011,73 @@ async function injectAIEstimate(estimation) {
         console.warn('Could not load settings for confidence display:', e);
     }
 
-    // Create AI estimate container
-    const estimateContainer = document.createElement('div');
-    estimateContainer.id = 'ai-estimate-container';
-    estimateContainer.style.cssText = `
-        margin-top: 8px;
-        padding: 12px;
-        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-        border: 1px solid #dee2e6;
-        border-radius: 8px;
-        font-family: Arial, sans-serif;
-        font-size: 14px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    `;
-
     const value = estimation.value;
     const reasoning = estimation.reasoning;
     const confidence = estimation.confidence || 70;
     const threshold = settings.confidenceThreshold || 70;
     const cost = estimation.estimatedCost;
-
-    // Check if this is an error result
     const isError = estimation.error === true;
 
-    estimateContainer.innerHTML = `
-        <div style="display: flex; align-items: center; margin-bottom: 8px;">
-            <span style="font-weight: bold; color: ${isError ? '#dc3545' : '#28a745'}; margin-right: 8px;">
-                ${isError ? '❌ Analysis Failed' : '🤖 AI Estimate:'}
-            </span>
-            ${!isError ? `
-                <span style="font-size: 16px; font-weight: bold; color: #007bff;">
-                    ${value !== null && value !== undefined ? `€${value.toFixed(2)}` : 'N/A'}
-                </span>
-            ` : ''}
-            <button id="toggle-reasoning" style="
-                margin-left: auto;
-                background: #6c757d;
-                color: white;
-                border: none;
-                padding: 4px 8px;
-                border-radius: 4px;
-                cursor: pointer;
-                font-size: 12px;
-            ">${isError ? 'Show Error' : 'Show Details'}</button>
-        </div>
-        <div id="reasoning-content" style="
-            display: none;
-            margin-top: 8px;
-            padding: 8px;
-            background: white;
-            border-radius: 4px;
-            border: 1px solid #dee2e6;
-            font-size: 13px;
-            line-height: 1.4;
-            color: #495057;
-        ">
-            ${reasoning}
-            ${!isError ? `
-                <br><br><strong>Confidence Score:</strong> ${confidence}/100 (Threshold: ${threshold})
-                ${cost ? `<br><strong>API Cost:</strong> ${cost.formatted} (${cost.totalTokens} tokens)` : ''}
-            ` : ''}
-        </div>
+    // Create AI estimate container - compact inline style
+    const estimateContainer = document.createElement('div');
+    estimateContainer.id = 'ai-estimate-container';
+    estimateContainer.style.cssText = `
+        display: inline-block;
+        margin-left: 15px;
+        padding: 8px 12px;
+        background: linear-gradient(135deg, #f0f8ff 0%, #e1f0ff 100%);
+        border: 2px solid #2196F3;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #1a1a1a;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        position: relative;
     `;
-
-    // Insert after the price element - careful approach
-    const parentNode = priceElement.parentNode;
-    const nextSibling = priceElement.nextSibling;
-
-    // Only insert if we have a valid parent and the next sibling belongs to it
-    if (parentNode && nextSibling && nextSibling.parentNode === parentNode) {
-        parentNode.insertBefore(estimateContainer, nextSibling);
-    } else if (parentNode) {
-        // Fallback: just append to the parent
-        parentNode.appendChild(estimateContainer);
-    } else {
-        // Emergency fallback: append to body with absolute positioning
-        document.body.appendChild(estimateContainer);
-        const rect = priceElement.getBoundingClientRect();
-        estimateContainer.style.position = 'absolute';
-        estimateContainer.style.top = (rect.bottom + 10) + 'px';
-        estimateContainer.style.left = rect.left + 'px';
-        estimateContainer.style.zIndex = '10000';
-        estimateContainer.style.maxWidth = '400px';
-    }
-
-    // Add some margin to separate from price
-    estimateContainer.style.marginTop = '8px';
-
-    // Add toggle functionality
-    const toggleButton = estimateContainer.querySelector('#toggle-reasoning');
-    const reasoningContent = estimateContainer.querySelector('#reasoning-content');
-
-    toggleButton.addEventListener('click', function() {
-        if (reasoningContent.style.display === 'none') {
-            reasoningContent.style.display = 'block';
-            this.textContent = 'Hide Details';
+    
+    const summaryText = document.createElement('div');
+    summaryText.innerHTML = `🤖 AI Estimate: €${value !== null && value !== undefined ? value.toFixed(0) : 'N/A'} <span style="font-size: 11px; font-weight: normal;">(${confidence}% confidence)</span> <span style="font-size: 10px;">▼</span>`;
+    
+    const reasoningBox = document.createElement('div');
+    reasoningBox.style.cssText = `
+        display: none;
+        margin-top: 8px;
+        padding: 8px;
+        border-top: 1px solid #2196F3;
+        font-size: 12px;
+        font-weight: normal;
+        line-height: 1.5;
+        max-width: 500px;
+        color: #2d2d2d;
+        white-space: normal;
+    `;
+    reasoningBox.innerHTML = `
+        <strong>Reasoning:</strong><br>${reasoning || 'No reasoning provided'}
+        ${estimation.model ? `<br><br><strong>Model:</strong> ${estimation.model}` : ''}
+        ${!isError && cost ? `<br><strong>API Cost:</strong> ${cost.formatted} (${cost.totalTokens} tokens)` : ''}
+    `;
+    
+    estimateContainer.appendChild(summaryText);
+    estimateContainer.appendChild(reasoningBox);
+    
+    let expanded = false;
+    estimateContainer.addEventListener('click', function() {
+        expanded = !expanded;
+        if (expanded) {
+            reasoningBox.style.display = 'block';
+            summaryText.querySelector('span:last-child').textContent = '▲';
+            estimateContainer.style.display = 'block';
         } else {
-            reasoningContent.style.display = 'none';
-            this.textContent = 'Show Details';
+            reasoningBox.style.display = 'none';
+            summaryText.querySelector('span:last-child').textContent = '▼';
+            estimateContainer.style.display = 'inline-block';
         }
     });
+
+    // Insert inline next to price
+    priceElement.style.display = 'flex';
+    priceElement.style.alignItems = 'center';
+    priceElement.style.flexWrap = 'wrap';
+    priceElement.appendChild(estimateContainer);
 }
