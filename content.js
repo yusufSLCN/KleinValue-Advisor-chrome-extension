@@ -5,10 +5,6 @@
 
 // Libraries are now imported as ES modules
 
-// utils.js will be loaded before this script via manifest.json
-// StorageManager and getEstimator are available globally via window
-console.log('🤖 Content.js starting, checking for StorageManager:', typeof window.StorageManager);
-
 // Global analyzer instance
 let analyzer = null;
 
@@ -18,34 +14,22 @@ async function initializeAnalyzer() {
         const apiKey = await window.StorageManager.getApiKey();
         if (apiKey) {
             analyzer = await window.getEstimator();
-            console.log('AI analyzer initialized successfully');
         }
     } catch (error) {
-        if (error.message.includes('Extension context invalidated')) {
-            console.log('Extension reloaded, analyzer will be initialized on demand');
-        } else {
+        if (!error.message.includes('Extension context invalidated')) {
             console.error('Failed to initialize AI analyzer:', error);
         }
     }
 }
 
-
-// Debug: Log that script is loaded
-console.log('🤖 Kleinanzeigen Monitor: Content script loaded on', window.location.href);
-
 // Wait for page to load
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🤖 DOMContentLoaded event fired');
     initializeAnalyzer();
     injectAIAnalysisButton();
 });
 
 // Also run immediately in case DOM is already loaded
-if (document.readyState === 'loading') {
-    // DOM is still loading
-} else {
-    // DOM is already ready
-    console.log('🤖 DOM already ready, running immediately');
+if (document.readyState !== 'loading') {
     initializeAnalyzer();
     injectAIAnalysisButton();
 }
@@ -80,23 +64,18 @@ function injectAIAnalysisButton() {
     if (!titleElement) {
         console.log('🤖 No title element found - not on an item page');
         return; // Not on an item page
+function injectAIAnalysisButton() {
+    // Check if button already exists
+    if (document.getElementById('ai-analyze-button')) {
+        return;
     }
 
-    // Check if auto-analyze is enabled and if this item has already been analyzed
-    window.StorageManager.getSettings().then(settings => {
-        if (settings.autoAnalyze) {
-            const currentUrl = window.location.href;
-            window.StorageManager.getItems().then(items => {
-                const existingItem = items.find(item => item.url === currentUrl);
-
-                if (existingItem && existingItem.estimation) {
-                    // Item has been analyzed before - show the estimate directly
-                    injectAIEstimate(existingItem.estimation);
-                }
-            }).catch(error => {
-                if (error.message.includes('Extension context invalidated')) {
-                    console.log('Extension reloaded, skipping cached analysis check');
-                } else {
+    // Find the ad title container (typically h1 or .ad-titles)
+    const titleElement = document.querySelector('h1.adtitle') || document.querySelector('.ad-titles h1') || document.querySelector('h1');
+    
+    if (!titleElement) {
+        return; // Not on an item page
+    }           } else {
                     console.error('Error checking cached analysis:', error);
                 }
             });

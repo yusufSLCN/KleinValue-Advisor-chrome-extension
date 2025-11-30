@@ -599,5 +599,3 @@ async function getEstimator() {
 window.GeminiEstimator = GeminiEstimator;
 window.StorageManager = StorageManager;
 window.getEstimator = getEstimator;
-
-console.log('🤖 utils.js loaded - StorageManager available:', typeof window.StorageManager);

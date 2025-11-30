@@ -3,24 +3,15 @@
  * Adds AI price indicators to search result items
  */
 
-console.log('🔍 Search script loaded on:', window.location.href);
-console.log('🔍 Pathname:', window.location.pathname);
-
 // Check if we're on an item detail page and exit if so
-if (window.location.pathname.includes('/s-anzeige/')) {
-    console.log('🔍 On item page, exiting search script');
-} else {
-    console.log('🔍 On search page, initializing price indicators');
-    
+if (!window.location.pathname.includes('/s-anzeige/')) {
     // Wait for page to load
     document.addEventListener('DOMContentLoaded', function() {
-        console.log('🔍 DOMContentLoaded fired');
         addPriceIndicators();
     });
 
     // Also run immediately in case DOM is already loaded
     if (document.readyState !== 'loading') {
-        console.log('🔍 DOM already ready, running immediately');
         addPriceIndicators();
     }
 
@@ -48,58 +39,46 @@ async function addPriceIndicators() {
         
         if (!analyzedItems || analyzedItems.length === 0) {
             console.log('🔍 No analyzed items yet');
+async function addPriceIndicators() {
+    try {
+        const analyzedItems = await window.StorageManager.getItems();
+        
+        if (!analyzedItems || analyzedItems.length === 0) {
             return;
         }
 
-        // Find all search result items on the page
         const searchItems = document.querySelectorAll('article.aditem, li.ad-listitem, [data-adid]');
-        console.log('🔍 Found', searchItems.length, 'search items on page');
         
         searchItems.forEach(itemElement => {
-            // Skip if we already added an indicator to this element
             if (itemElement.querySelector('.ai-price-indicator')) {
                 return;
             }
 
-            // Extract the URL from the item
             const linkElement = itemElement.querySelector('a[href*="/s-anzeige/"]');
             if (!linkElement) {
                 return;
             }
 
             const itemUrl = linkElement.href;
-            
-            // Check if this item has been analyzed
             const analyzedItem = analyzedItems.find(item => item.url === itemUrl);
             
             if (analyzedItem && analyzedItem.estimation && !analyzedItem.estimation.error) {
-                console.log('🔍 Injecting badge for:', analyzedItem.title);
                 injectPriceIndicator(itemElement, analyzedItem);
             }
         });
     } catch (error) {
-        console.error('🔍 Error adding price indicators:', error);
+        console.error('Error adding price indicators:', error);
     }
 }
-
+    const estimation = analyzedItem.estimation;
+    const aiPrice = estimation.value;
+    const confidence = estimation.confidence || 70;
 function injectPriceIndicator(itemElement, analyzedItem) {
     const priceElement = itemElement.querySelector('.aditem-main--middle--price-shipping--price, .price, [class*="price"]');
     
     if (!priceElement) {
-        console.log('🔍 No price element found in item');
         return;
-    }
-
-    const estimation = analyzedItem.estimation;
-    const aiPrice = estimation.value;
-    const confidence = estimation.confidence || 70;
-    const listedPrice = analyzedItem.price || 0;
-    const isBargain = listedPrice > 0 && aiPrice > listedPrice * 1.2;
-    
-    const indicator = document.createElement('div');
-    indicator.className = 'ai-price-indicator';
-    indicator.style.cssText = `
-        display: inline-flex;
+    }   display: inline-flex;
         align-items: center;
         gap: 4px;
         margin-left: 8px;
@@ -169,4 +148,9 @@ function injectPriceIndicator(itemElement, analyzedItem) {
     priceElement.appendChild(indicator);
     
     console.log('🔍 Badge injected successfully');
+}
+    priceElement.style.display = 'flex';
+    priceElement.style.alignItems = 'center';
+    priceElement.style.flexWrap = 'wrap';
+    priceElement.appendChild(indicator);
 }
