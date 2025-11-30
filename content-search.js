@@ -32,15 +32,6 @@ if (!window.location.pathname.includes('/s-anzeige/')) {
 
 async function addPriceIndicators() {
     try {
-        console.log('🔍 Adding price indicators...');
-        // Get all analyzed items from storage
-        const analyzedItems = await window.StorageManager.getItems();
-        console.log('🔍 Found', analyzedItems.length, 'analyzed items');
-        
-        if (!analyzedItems || analyzedItems.length === 0) {
-            console.log('🔍 No analyzed items yet');
-async function addPriceIndicators() {
-    try {
         const analyzedItems = await window.StorageManager.getItems();
         
         if (!analyzedItems || analyzedItems.length === 0) {
@@ -70,15 +61,28 @@ async function addPriceIndicators() {
         console.error('Error adding price indicators:', error);
     }
 }
-    const estimation = analyzedItem.estimation;
-    const aiPrice = estimation.value;
-    const confidence = estimation.confidence || 70;
+
 function injectPriceIndicator(itemElement, analyzedItem) {
     const priceElement = itemElement.querySelector('.aditem-main--middle--price-shipping--price, .price, [class*="price"]');
     
     if (!priceElement) {
         return;
-    }   display: inline-flex;
+    }
+
+    const estimation = analyzedItem.estimation;
+    const aiPrice = estimation.value;
+    const confidence = estimation.confidence || 70;
+    
+    // Extract listed price from the item
+    const listedPrice = parseFloat(analyzedItem.price?.replace('€', '').replace(',', '.').trim()) || 0;
+    
+    // Check if it's a bargain (AI price is significantly higher than listed price)
+    const isBargain = listedPrice > 0 && aiPrice > listedPrice * 1.2;
+    
+    const indicator = document.createElement('div');
+    indicator.className = 'ai-price-indicator';
+    indicator.style.cssText = `
+        display: inline-flex;
         align-items: center;
         gap: 4px;
         margin-left: 8px;
@@ -142,13 +146,6 @@ function injectPriceIndicator(itemElement, analyzedItem) {
         }
     });
     
-    priceElement.style.display = 'flex';
-    priceElement.style.alignItems = 'center';
-    priceElement.style.flexWrap = 'wrap';
-    priceElement.appendChild(indicator);
-    
-    console.log('🔍 Badge injected successfully');
-}
     priceElement.style.display = 'flex';
     priceElement.style.alignItems = 'center';
     priceElement.style.flexWrap = 'wrap';
