@@ -1,0 +1,49 @@
+{
+  "manifest_version": 3,
+  "name": "Kleinanzeigen Monitor",
+  "version": "1.0",
+  "description": "AI-powered item analysis for Kleinanzeigen",
+
+  "permissions": [
+    "storage",
+    "activeTab"
+  ],
+
+  "host_permissions": [
+    "https://www.kleinanzeigen.de/*",
+    "https://generativelanguage.googleapis.com/*",
+    "https://cdn.jsdelivr.net/*",
+    "https://img.kleinanzeigen.de/*",
+    "https://i.ebayimg.com/*",
+    "*://*/*"
+  ],
+
+  "content_scripts": [
+    {
+      "matches": ["https://www.kleinanzeigen.de/s-anzeige/*"],
+      "js": ["utils.js", "content.js"]
+    },
+    {
+      "matches": [
+        "https://www.kleinanzeigen.de/s-*",
+        "https://www.kleinanzeigen.de/"
+      ],
+      "exclude_matches": ["https://www.kleinanzeigen.de/s-anzeige/*"],
+      "js": ["utils.js", "content-search.js"]
+    }
+  ],
+
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Kleinanzeigen Monitor"
+  },
+
+  "options_page": "settings.html",
+
+  "web_accessible_resources": [
+    {
+      "resources": ["dashboard.html", "dashboard.css", "dist/dashboard.js", "dist/utils.js"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}

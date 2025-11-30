@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kleinanzeigen Monitor Dashboard</title>
+    <link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 Kleinanzeigen Monitor</h1>
+            <p>AI-Powered Item Analysis Dashboard</p>
+        </div>
+
+        <div class="search-section">
+            <div class="search-container">
+                <input type="text" id="search-input" class="search-input" placeholder="Search items...">
+                <span class="search-icon">🔍</span>
+            </div>
+        </div>
+
+        <button class="stats-toggle" id="stats-toggle">
+            📊 Show Statistics
+        </button>
+
+        <div class="stats-section" id="stats-section">
+            <div class="stats" id="stats">
+                <div class="stat-card">
+                    <h3>Price Ranges</h3>
+                    <div class="value" id="price-ranges">Loading...</div>
+                </div>
+                <div class="stat-card" id="bargains-card" style="cursor: pointer;">
+                    <h3>Bargain Opportunities</h3>
+                    <div class="value" id="bargains">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Recent (24h)</h3>
+                    <div class="value" id="recent-items">0</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="items-section">
+            <div class="items-header">
+                <div class="items-count" id="items-count">0 items</div>
+            </div>
+
+            <div class="items-grid" id="items-container">
+                <!-- Items will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="dist/dashboard.js"></script>
+</body>
+</html>
