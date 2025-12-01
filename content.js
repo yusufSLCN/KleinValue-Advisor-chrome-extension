@@ -89,17 +89,17 @@ async function showExistingEstimation(titleElement, estimation) {
     const cost = estimation.estimatedCost;
     const isError = estimation.error === true;
 
-    // Create AI estimate container - compact inline style (same as injectAIEstimate)
+    // Create compact AI estimate badge
     const estimateContainer = document.createElement('div');
     estimateContainer.id = 'ai-estimate-container';
     estimateContainer.style.cssText = `
         display: inline-block;
         margin-left: 15px;
-        padding: 8px 12px;
+        padding: 6px 12px;
         background: linear-gradient(135deg, #f0f8ff 0%, #e1f0ff 100%);
         border: 2px solid #2196F3;
-        border-radius: 8px;
-        font-size: 14px;
+        border-radius: 20px;
+        font-size: 13px;
         font-weight: 600;
         color: #1a1a1a;
         cursor: pointer;
@@ -108,41 +108,72 @@ async function showExistingEstimation(titleElement, estimation) {
     `;
     
     const summaryText = document.createElement('div');
-    summaryText.innerHTML = `🤖 AI Estimate: €${value !== null && value !== undefined ? value.toFixed(0) : 'N/A'} <span style="font-size: 11px; font-weight: normal;">(${confidence}% confidence)</span> <span style="font-size: 10px;">▼</span>`;
-    
-    const reasoningBox = document.createElement('div');
-    reasoningBox.style.cssText = `
-        display: none;
-        margin-top: 8px;
-        padding: 8px;
-        border-top: 1px solid #2196F3;
-        font-size: 12px;
-        font-weight: normal;
-        line-height: 1.5;
-        max-width: 500px;
-        color: #2d2d2d;
-        white-space: normal;
-    `;
-    reasoningBox.innerHTML = `
-        <strong>Reasoning:</strong><br>${reasoning || 'No reasoning provided'}
-        ${estimation.model ? `<br><br><strong>Model:</strong> ${estimation.model}` : ''}
-        ${!isError && cost ? `<br><strong>API Cost:</strong> ${cost.formatted} (${cost.totalTokens} tokens)` : ''}
-    `;
-    
+    summaryText.innerHTML = `🤖 €${value !== null && value !== undefined ? value.toFixed(0) : 'N/A'} <span style="font-size: 10px;">▼</span>`;
     estimateContainer.appendChild(summaryText);
-    estimateContainer.appendChild(reasoningBox);
+    
+    // Create floating details panel
+    const detailsPanel = document.createElement('div');
+    detailsPanel.className = 'ai-details-panel';
+    detailsPanel.style.cssText = `
+        display: none;
+        position: fixed;
+        padding: 16px;
+        background: white;
+        border: 2px solid #2196F3;
+        border-radius: 12px;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+        z-index: 10000;
+        min-width: 400px;
+        max-width: 550px;
+        font-size: 13px;
+        font-weight: normal;
+        line-height: 1.6;
+        color: #2d2d2d;
+    `;
+    detailsPanel.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 2px solid #e9ecef;">
+            <div>
+                <strong style="font-size: 18px; color: #2196F3;">AI Estimate: €${value !== null && value !== undefined ? value.toFixed(2) : 'N/A'}</strong>
+                <div style="font-size: 12px; color: #6c757d; margin-top: 4px;">Confidence: ${confidence}%</div>
+            </div>
+        </div>
+        <div style="margin-bottom: 12px;">
+            <strong style="color: #495057; font-size: 14px;">Reasoning:</strong>
+            <div style="margin-top: 6px; color: #495057; line-height: 1.5;">${reasoning || 'No reasoning provided'}</div>
+        </div>
+        <div style="padding-top: 10px; border-top: 1px solid #e9ecef; font-size: 11px; color: #6c757d;">
+            ${estimation.model ? `<div style="margin-bottom: 4px;"><strong>Model:</strong> ${estimation.model}</div>` : ''}
+            ${!isError && cost ? `<div><strong>API Cost:</strong> ${cost.formatted} (${cost.totalTokens} tokens)</div>` : ''}
+        </div>
+    `;
+    
+    document.body.appendChild(detailsPanel);
     
     let expanded = false;
-    estimateContainer.addEventListener('click', function() {
+    estimateContainer.addEventListener('click', function(e) {
+        e.stopPropagation();
         expanded = !expanded;
         if (expanded) {
-            reasoningBox.style.display = 'block';
+            const rect = estimateContainer.getBoundingClientRect();
+            detailsPanel.style.display = 'block';
+            detailsPanel.style.top = (rect.bottom + 8) + 'px';
+            detailsPanel.style.left = Math.max(10, rect.left) + 'px';
             summaryText.querySelector('span:last-child').textContent = '▲';
-            estimateContainer.style.display = 'block';
+            estimateContainer.style.background = 'linear-gradient(135deg, #d4edff 0%, #c1e4ff 100%)';
         } else {
-            reasoningBox.style.display = 'none';
+            detailsPanel.style.display = 'none';
             summaryText.querySelector('span:last-child').textContent = '▼';
-            estimateContainer.style.display = 'inline-block';
+            estimateContainer.style.background = 'linear-gradient(135deg, #f0f8ff 0%, #e1f0ff 100%)';
+        }
+    });
+    
+    // Close when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!estimateContainer.contains(e.target) && !detailsPanel.contains(e.target) && expanded) {
+            expanded = false;
+            detailsPanel.style.display = 'none';
+            summaryText.querySelector('span:last-child').textContent = '▼';
+            estimateContainer.style.background = 'linear-gradient(135deg, #f0f8ff 0%, #e1f0ff 100%)';
         }
     });
 
@@ -1018,17 +1049,17 @@ async function injectAIEstimate(estimation) {
     const cost = estimation.estimatedCost;
     const isError = estimation.error === true;
 
-    // Create AI estimate container - compact inline style
+    // Create compact AI estimate badge
     const estimateContainer = document.createElement('div');
     estimateContainer.id = 'ai-estimate-container';
     estimateContainer.style.cssText = `
         display: inline-block;
         margin-left: 15px;
-        padding: 8px 12px;
+        padding: 6px 12px;
         background: linear-gradient(135deg, #f0f8ff 0%, #e1f0ff 100%);
         border: 2px solid #2196F3;
-        border-radius: 8px;
-        font-size: 14px;
+        border-radius: 20px;
+        font-size: 13px;
         font-weight: 600;
         color: #1a1a1a;
         cursor: pointer;
@@ -1037,41 +1068,72 @@ async function injectAIEstimate(estimation) {
     `;
     
     const summaryText = document.createElement('div');
-    summaryText.innerHTML = `🤖 AI Estimate: €${value !== null && value !== undefined ? value.toFixed(0) : 'N/A'} <span style="font-size: 11px; font-weight: normal;">(${confidence}% confidence)</span> <span style="font-size: 10px;">▼</span>`;
-    
-    const reasoningBox = document.createElement('div');
-    reasoningBox.style.cssText = `
-        display: none;
-        margin-top: 8px;
-        padding: 8px;
-        border-top: 1px solid #2196F3;
-        font-size: 12px;
-        font-weight: normal;
-        line-height: 1.5;
-        max-width: 500px;
-        color: #2d2d2d;
-        white-space: normal;
-    `;
-    reasoningBox.innerHTML = `
-        <strong>Reasoning:</strong><br>${reasoning || 'No reasoning provided'}
-        ${estimation.model ? `<br><br><strong>Model:</strong> ${estimation.model}` : ''}
-        ${!isError && cost ? `<br><strong>API Cost:</strong> ${cost.formatted} (${cost.totalTokens} tokens)` : ''}
-    `;
-    
+    summaryText.innerHTML = `🤖 €${value !== null && value !== undefined ? value.toFixed(0) : 'N/A'} <span style="font-size: 10px;">▼</span>`;
     estimateContainer.appendChild(summaryText);
-    estimateContainer.appendChild(reasoningBox);
+    
+    // Create floating details panel
+    const detailsPanel = document.createElement('div');
+    detailsPanel.className = 'ai-details-panel';
+    detailsPanel.style.cssText = `
+        display: none;
+        position: fixed;
+        padding: 16px;
+        background: white;
+        border: 2px solid #2196F3;
+        border-radius: 12px;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+        z-index: 10000;
+        min-width: 400px;
+        max-width: 550px;
+        font-size: 13px;
+        font-weight: normal;
+        line-height: 1.6;
+        color: #2d2d2d;
+    `;
+    detailsPanel.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 2px solid #e9ecef;">
+            <div>
+                <strong style="font-size: 18px; color: #2196F3;">AI Estimate: €${value !== null && value !== undefined ? value.toFixed(2) : 'N/A'}</strong>
+                <div style="font-size: 12px; color: #6c757d; margin-top: 4px;">Confidence: ${confidence}%</div>
+            </div>
+        </div>
+        <div style="margin-bottom: 12px;">
+            <strong style="color: #495057; font-size: 14px;">Reasoning:</strong>
+            <div style="margin-top: 6px; color: #495057; line-height: 1.5;">${reasoning || 'No reasoning provided'}</div>
+        </div>
+        <div style="padding-top: 10px; border-top: 1px solid #e9ecef; font-size: 11px; color: #6c757d;">
+            ${estimation.model ? `<div style="margin-bottom: 4px;"><strong>Model:</strong> ${estimation.model}</div>` : ''}
+            ${!isError && cost ? `<div><strong>API Cost:</strong> ${cost.formatted} (${cost.totalTokens} tokens)</div>` : ''}
+        </div>
+    `;
+    
+    document.body.appendChild(detailsPanel);
     
     let expanded = false;
-    estimateContainer.addEventListener('click', function() {
+    estimateContainer.addEventListener('click', function(e) {
+        e.stopPropagation();
         expanded = !expanded;
         if (expanded) {
-            reasoningBox.style.display = 'block';
+            const rect = estimateContainer.getBoundingClientRect();
+            detailsPanel.style.display = 'block';
+            detailsPanel.style.top = (rect.bottom + 8) + 'px';
+            detailsPanel.style.left = Math.max(10, rect.left) + 'px';
             summaryText.querySelector('span:last-child').textContent = '▲';
-            estimateContainer.style.display = 'block';
+            estimateContainer.style.background = 'linear-gradient(135deg, #d4edff 0%, #c1e4ff 100%)';
         } else {
-            reasoningBox.style.display = 'none';
+            detailsPanel.style.display = 'none';
             summaryText.querySelector('span:last-child').textContent = '▼';
-            estimateContainer.style.display = 'inline-block';
+            estimateContainer.style.background = 'linear-gradient(135deg, #f0f8ff 0%, #e1f0ff 100%)';
+        }
+    });
+    
+    // Close when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!estimateContainer.contains(e.target) && !detailsPanel.contains(e.target) && expanded) {
+            expanded = false;
+            detailsPanel.style.display = 'none';
+            summaryText.querySelector('span:last-child').textContent = '▼';
+            estimateContainer.style.background = 'linear-gradient(135deg, #f0f8ff 0%, #e1f0ff 100%)';
         }
     });
 
