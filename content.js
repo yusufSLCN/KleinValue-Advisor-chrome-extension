@@ -116,7 +116,7 @@ async function showExistingEstimation(titleElement, estimation) {
     detailsPanel.className = 'ai-details-panel';
     detailsPanel.style.cssText = `
         display: none;
-        position: fixed;
+        position: absolute;
         padding: 16px;
         background: white;
         border: 2px solid #2196F3;
@@ -129,6 +129,9 @@ async function showExistingEstimation(titleElement, estimation) {
         font-weight: normal;
         line-height: 1.6;
         color: #2d2d2d;
+        top: 100%;
+        left: 0;
+        margin-top: 8px;
     `;
     detailsPanel.innerHTML = `
         <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 2px solid #e9ecef;">
@@ -147,17 +150,15 @@ async function showExistingEstimation(titleElement, estimation) {
         </div>
     `;
     
-    document.body.appendChild(detailsPanel);
-    
     let expanded = false;
     estimateContainer.addEventListener('click', function(e) {
         e.stopPropagation();
         expanded = !expanded;
         if (expanded) {
-            const rect = estimateContainer.getBoundingClientRect();
+            // Make price element relative to position the panel
+            priceElement.style.position = 'relative';
+            priceElement.appendChild(detailsPanel);
             detailsPanel.style.display = 'block';
-            detailsPanel.style.top = (rect.bottom + 8) + 'px';
-            detailsPanel.style.left = Math.max(10, rect.left) + 'px';
             summaryText.querySelector('span:last-child').textContent = '▲';
             estimateContainer.style.background = 'linear-gradient(135deg, #d4edff 0%, #c1e4ff 100%)';
         } else {
@@ -1076,7 +1077,7 @@ async function injectAIEstimate(estimation) {
     detailsPanel.className = 'ai-details-panel';
     detailsPanel.style.cssText = `
         display: none;
-        position: fixed;
+        position: absolute;
         padding: 16px;
         background: white;
         border: 2px solid #2196F3;
@@ -1089,6 +1090,9 @@ async function injectAIEstimate(estimation) {
         font-weight: normal;
         line-height: 1.6;
         color: #2d2d2d;
+        top: 100%;
+        left: 0;
+        margin-top: 8px;
     `;
     detailsPanel.innerHTML = `
         <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 2px solid #e9ecef;">
@@ -1107,17 +1111,15 @@ async function injectAIEstimate(estimation) {
         </div>
     `;
     
-    document.body.appendChild(detailsPanel);
-    
     let expanded = false;
     estimateContainer.addEventListener('click', function(e) {
         e.stopPropagation();
         expanded = !expanded;
         if (expanded) {
-            const rect = estimateContainer.getBoundingClientRect();
+            // Make price element relative to position the panel
+            priceElement.style.position = 'relative';
+            priceElement.appendChild(detailsPanel);
             detailsPanel.style.display = 'block';
-            detailsPanel.style.top = (rect.bottom + 8) + 'px';
-            detailsPanel.style.left = Math.max(10, rect.left) + 'px';
             summaryText.querySelector('span:last-child').textContent = '▲';
             estimateContainer.style.background = 'linear-gradient(135deg, #d4edff 0%, #c1e4ff 100%)';
         } else {
