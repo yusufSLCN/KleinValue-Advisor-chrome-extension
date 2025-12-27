@@ -11,7 +11,6 @@ class GeminiEstimator {
         this.modelName = settings.modelName || 'gemini-2.5-flash';
         this.maxImages = settings.maxImages || 4;
         this.enableImages = settings.enableImages !== false; // Default true
-        this.confidenceThreshold = settings.confidenceThreshold || 70;
         console.log('GeminiEstimator created with model:', this.modelName);
     }
 
@@ -55,9 +54,6 @@ class GeminiEstimator {
             }
 
             const result = this.parseResponse(text);
-
-            // Check if confidence meets threshold
-            result.meetsThreshold = result.confidence >= this.confidenceThreshold;
 
             // Add model information
             result.model = this.modelName;
@@ -540,8 +536,7 @@ class StorageManager {
                     'modelName',
                     'maxImages',
                     'enableImages',
-                    'autoAnalyze',
-                    'confidenceThreshold'
+                    'autoAnalyze'
                 ], (result) => {
                     if (chrome.runtime.lastError) {
                         console.error('Error getting settings:', chrome.runtime.lastError);
@@ -552,8 +547,7 @@ class StorageManager {
                             modelName: result.modelName || 'gemini-2.5-flash',
                             maxImages: result.maxImages || 4,
                             enableImages: result.enableImages !== false,
-                            autoAnalyze: result.autoAnalyze !== false,
-                            confidenceThreshold: result.confidenceThreshold || 70
+                            autoAnalyze: result.autoAnalyze !== false
                         };
                         console.log('StorageManager.getSettings - resolved settings:', settings);
                         resolve(settings);

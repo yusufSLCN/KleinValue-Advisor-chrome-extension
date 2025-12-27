@@ -74,18 +74,9 @@ async function showExistingEstimation(titleElement, estimation) {
         return;
     }
 
-    // Get settings
-    let settings = { confidenceThreshold: 70 };
-    try {
-        settings = await window.StorageManager.getSettings();
-    } catch (e) {
-        console.warn('Could not load settings:', e);
-    }
-
     const value = estimation.value;
     const reasoning = estimation.reasoning;
     const confidence = estimation.confidence || 70;
-    const threshold = settings.confidenceThreshold || 70;
     const cost = estimation.estimatedCost;
     const isError = estimation.error === true;
 
@@ -95,11 +86,11 @@ async function showExistingEstimation(titleElement, estimation) {
     estimateContainer.style.cssText = `
         display: inline-block;
         margin-left: 15px;
-        padding: 6px 12px;
+        padding: 2px 10px;
         background: linear-gradient(135deg, #f0f8ff 0%, #e1f0ff 100%);
         border: 2px solid #2196F3;
         border-radius: 20px;
-        font-size: 13px;
+        font-size: 15px;
         font-weight: 600;
         color: #1a1a1a;
         cursor: pointer;
@@ -210,7 +201,7 @@ function injectAIAnalysisButton() {
         border-radius: 20px;
         cursor: pointer;
         font-size: 14px;
-        margin-left: 10px;
+        margin-bottom: 5px;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         transition: all 0.2s;
     `;
@@ -1035,18 +1026,9 @@ async function injectAIEstimate(estimation) {
         return;
     }
 
-    // Get settings to access confidence threshold
-    let settings = { confidenceThreshold: 70 }; // Default fallback
-    try {
-        settings = await window.StorageManager.getSettings();
-    } catch (e) {
-        console.warn('Could not load settings for confidence display:', e);
-    }
-
     const value = estimation.value;
     const reasoning = estimation.reasoning;
     const confidence = estimation.confidence || 70;
-    const threshold = settings.confidenceThreshold || 70;
     const cost = estimation.estimatedCost;
     const isError = estimation.error === true;
 
