@@ -28,7 +28,7 @@
     {
       "matches": ["https://www.kleinanzeigen.de/s-anzeige/*"],
       "css": ["content.css"],
-      "js": ["utils.js", "content.js"]
+      "js": ["dist/utils.js", "dist/content.js"]
     },
     {
       "matches": [
@@ -37,7 +37,7 @@
       ],
       "exclude_matches": ["https://www.kleinanzeigen.de/s-anzeige/*"],
       "css": ["content.css"],
-      "js": ["utils.js", "content-search.js"]
+      "js": ["dist/utils.js", "dist/content-search.js"]
     }
   ],
 

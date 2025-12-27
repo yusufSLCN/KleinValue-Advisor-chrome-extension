@@ -2,7 +2,7 @@
   "name": "chrome_extension",
   "version": "1.0.0",
   "description": "",
-  "main": "background.js",
+  "main": "content.js",
   "scripts": {
     "build": "webpack --mode=production",
     "dev": "webpack --mode=development --watch",

@@ -9,8 +9,7 @@ module.exports = {
     utils: './utils.js',
     popup: './popup.js',
     dashboard: './dashboard.js',
-    settings: './settings.js',
-    background: './background.js'
+    settings: './settings.js'
   },
   output: {
     path: path.resolve(__dirname, 'dist'),

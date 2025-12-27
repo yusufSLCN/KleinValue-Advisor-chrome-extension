@@ -34,7 +34,7 @@ A powerful Chrome extension that analyzes Kleinanzeigen listings using Google's 
 ### 🔧 Technical Excellence
 - **Serverless Architecture**: All processing happens client-side
 - **Local Storage**: Data persists securely in Chrome storage
-- **Modular Design**: Clean, maintainable codebase with webpack bundling
+- **Modular Design**: Clean, maintainable codebase with webpack bundling and shared `lib/` modules for estimator, storage, and factory logic
 - **Error Handling**: Robust error handling and fallback mechanisms
 
 ## 🚀 Quick Start
@@ -120,8 +120,12 @@ A powerful Chrome extension that analyzes Kleinanzeigen listings using Google's 
 ```
 chrome_extension/
 ├── manifest.json          # Extension configuration & permissions
+├── lib/                  # Shared modules (Gemini estimator + storage manager)
+│   ├── gemini-estimator.js
+│   ├── storage-manager.js
+│   └── index.js
 ├── content.js            # Injects analysis UI on Kleinanzeigen pages
-├── utils.js              # Gemini API integration & cost calculation
+├── utils.js              # Re-exports shared modules for backward compatibility
 ├── popup.html/js         # Compact extension popup
 ├── dashboard.html/js     # Modern dashboard with search, stats, & management
 ├── dashboard.css         # External styles for dashboard (best practices)
