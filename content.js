@@ -291,8 +291,14 @@ function injectAIAnalysisButton() {
             // Perform direct AI analysis
             const estimation = await analyzer.estimateValue(this.itemData);
 
+            const listingPrice = typeof this.itemData.price === 'number' ? this.itemData.price : 0;
+            const estimatedValue = typeof estimation?.value === 'number' ? estimation.value : null;
+            const isGoodValue = listingPrice > 0 && estimatedValue !== null && estimatedValue > listingPrice;
+            estimation.isGoodValue = isGoodValue;
+
             // Add estimation to item data
             this.itemData.estimation = estimation;
+            this.itemData.isGoodValue = isGoodValue;
             this.itemData.analyzed_at = new Date().toISOString();
 
             // Save to chrome.storage.local
@@ -329,9 +335,11 @@ function injectAIAnalysisButton() {
                     value: null,
                     reasoning: 'Analysis failed - please check your API key and try again',
                     confidence: 0,
-                    model: 'error'
+                    model: 'error',
+                    isGoodValue: false
                 };
                 this.itemData.estimation = errorEstimation;
+                this.itemData.isGoodValue = false;
                 this.itemData.analyzed_at = new Date().toISOString();
 
                 try {

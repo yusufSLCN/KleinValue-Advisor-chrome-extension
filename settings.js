@@ -5,6 +5,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const enableImagesCheckbox = document.getElementById('enable-images');
     const autoAnalyzeCheckbox = document.getElementById('auto-analyze');
     const confidenceThresholdInput = document.getElementById('confidence-threshold');
+    const temperatureInput = document.getElementById('temperature');
+    const randomSeedInput = document.getElementById('random-seed');
     const saveButton = document.getElementById('save');
     const testButton = document.getElementById('test');
     const statusDiv = document.getElementById('status');
@@ -16,7 +18,9 @@ document.addEventListener('DOMContentLoaded', () => {
         'maxImages',
         'enableImages',
         'autoAnalyze',
-        'confidenceThreshold'
+        'confidenceThreshold',
+        'temperature',
+        'randomSeed'
     ], (result) => {
         console.log('Settings loaded from storage:', result);
         if (result.geminiApiKey) {
@@ -37,6 +41,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (result.confidenceThreshold !== undefined) {
             confidenceThresholdInput.value = result.confidenceThreshold;
         }
+        if (result.temperature !== undefined && temperatureInput) {
+            temperatureInput.value = result.temperature;
+        }
+        if (result.randomSeed !== undefined && randomSeedInput) {
+            randomSeedInput.value = result.randomSeed;
+        }
     });
 
     // Save settings
@@ -47,6 +57,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const enableImages = enableImagesCheckbox.checked;
         const autoAnalyze = autoAnalyzeCheckbox.checked;
         const confidenceThreshold = parseInt(confidenceThresholdInput.value);
+        const temperature = temperatureInput ? parseFloat(temperatureInput.value) : 0;
+        const randomSeed = randomSeedInput ? parseInt(randomSeedInput.value, 10) : 1337;
 
         // Validation
         if (!apiKey) {
@@ -61,13 +73,23 @@ document.addEventListener('DOMContentLoaded', () => {
             showStatus('Confidence threshold must be between 0 and 100', 'error');
             return;
         }
+        if (isNaN(temperature) || temperature < 0 || temperature > 2) {
+            showStatus('Temperature must be between 0 and 2', 'error');
+            return;
+        }
+        if (!Number.isInteger(randomSeed) || randomSeed < 0 || randomSeed > 2147483647) {
+            showStatus('Seed must be a whole number between 0 and 2,147,483,647', 'error');
+            return;
+        }
         const settings = {
             geminiApiKey: apiKey,
             modelName: modelName,
             maxImages: maxImages,
             enableImages: enableImages,
             autoAnalyze: autoAnalyze,
-            confidenceThreshold: confidenceThreshold
+            confidenceThreshold: confidenceThreshold,
+            temperature: temperature,
+            randomSeed: randomSeed
         };
 
         console.log('Saving settings:', settings);

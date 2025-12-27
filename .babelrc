@@ -7,14 +7,6 @@
       }
     ]
   ],
-  "plugins": [
-    [
-      "@babel/plugin-transform-runtime",
-      {
-        "regenerator": true,
-        "helpers": true
-      }
-    ]
-  ],
+  "plugins": [],
   "sourceType": "module"
 }

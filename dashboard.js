@@ -4,7 +4,7 @@ class DashboardManager {
         this.filteredItems = [];
         this.searchQuery = '';
         this.statsExpanded = false;
-        this.bargainFilter = false;
+        this.goodValueFilter = false;
         this.initialize();
     }
 
@@ -54,23 +54,19 @@ class DashboardManager {
             </div>
         `;
 
-        // Bargain opportunities (only from valid analyses)
-        const bargains = validItems.filter(item => {
-            const price = item.price || 0;
-            const estimate = item.estimation?.value || 0;
-            return price > 0 && estimate > price * 1.2;
-        }).length;
+        // Good value opportunities (only from valid analyses)
+        const goodValueCount = validItems.filter(item => this.isGoodValue(item)).length;
 
         // Recent items (last 24h) - count all items, not just valid ones
         const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
         const recentItems = this.items.filter(item => new Date(item.analyzedAt || 0) > oneDayAgo).length;
 
         const priceRangesEl = document.getElementById('price-ranges');
-        const bargainsEl = document.getElementById('bargains');
+        const goodValueEl = document.getElementById('good-value-count');
         const recentEl = document.getElementById('recent-items');
 
         if (priceRangesEl) priceRangesEl.innerHTML = priceRangesHtml;
-        if (bargainsEl) bargainsEl.textContent = bargains;
+        if (goodValueEl) goodValueEl.textContent = goodValueCount;
         if (recentEl) recentEl.textContent = recentItems;
     }
 
@@ -95,13 +91,9 @@ class DashboardManager {
             );
         }
 
-        // Apply bargain filter
-        if (this.bargainFilter) {
-            filtered = filtered.filter(item => {
-                const price = item.price || 0;
-                const estimate = item.estimation?.value || 0;
-                return price > 0 && estimate > price * 1.2;
-            });
+        // Apply good value filter
+        if (this.goodValueFilter) {
+            filtered = filtered.filter(item => this.isGoodValue(item));
         }
 
         this.filteredItems = filtered;
@@ -243,6 +235,18 @@ class DashboardManager {
         return div;
     }
 
+    isGoodValue(item) {
+        if (!item || item.estimation?.error) {
+            return false;
+        }
+        if (typeof item.isGoodValue === 'boolean') {
+            return item.isGoodValue;
+        }
+        const listingPrice = typeof item.price === 'number' ? item.price : 0;
+        const estimate = typeof item.estimation?.value === 'number' ? item.estimation.value : 0;
+        return listingPrice > 0 && estimate > listingPrice;
+    }
+
     escapeHtml(text) {
         const div = document.createElement('div');
         div.textContent = text;
@@ -271,12 +275,12 @@ class DashboardManager {
             this.toggleStats();
         });
 
-        // Bargain filter
-        const bargainsCard = document.getElementById('bargains-card');
-        if (bargainsCard) {
-            bargainsCard.addEventListener('click', () => {
-                this.bargainFilter = !this.bargainFilter;
-                bargainsCard.classList.toggle('active', this.bargainFilter);
+        // Good value filter
+        const goodValueCard = document.getElementById('good-value-card');
+        if (goodValueCard) {
+            goodValueCard.addEventListener('click', () => {
+                this.goodValueFilter = !this.goodValueFilter;
+                goodValueCard.classList.toggle('active', this.goodValueFilter);
                 this.filterItems();
             });
         }

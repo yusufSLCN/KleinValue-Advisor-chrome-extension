@@ -22,6 +22,11 @@ module.exports = {
       {
         test: /\.js$/,
         exclude: /node_modules/,
+        parser: {
+          javascript: {
+            sourceType: 'module'
+          }
+        },
         use: {
           loader: 'babel-loader',
           options: {

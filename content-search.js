@@ -87,8 +87,10 @@ function injectPriceIndicator(itemElement, analyzedItem) {
         listedPrice = analyzedItem.price;
     }
     
-    // Check if it's a bargain (AI price is significantly higher than listed price)
-    const isBargain = listedPrice > 0 && aiPrice > listedPrice * 1.2;
+    const storedGoodValue = typeof analyzedItem.isGoodValue === 'boolean' ? analyzedItem.isGoodValue : undefined;
+    const computedGoodValue = listedPrice > 0 && typeof aiPrice === 'number' && aiPrice > listedPrice;
+    const isGoodValue = storedGoodValue !== undefined ? storedGoodValue : computedGoodValue;
+    const label = isGoodValue ? 'Good Value' : 'AI Estimate';
     
     const indicator = document.createElement('div');
     indicator.className = 'ai-price-indicator';
@@ -98,20 +100,20 @@ function injectPriceIndicator(itemElement, analyzedItem) {
         gap: 4px;
         margin-left: 8px;
         padding: 3px 8px;
-        background: ${isBargain ? 'linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%)' : 'linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%)'};
-        border: 1px solid ${isBargain ? '#28a745' : '#adb5bd'};
+        background: ${isGoodValue ? 'linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%)' : 'linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%)'};
+        border: 1px solid ${isGoodValue ? '#28a745' : '#adb5bd'};
         border-radius: 12px;
         font-size: 11px;
         font-weight: 600;
-        color: ${isBargain ? '#155724' : '#495057'};
+        color: ${isGoodValue ? '#155724' : '#495057'};
         cursor: help;
         transition: all 0.2s ease;
         white-space: nowrap;
     `;
     
     indicator.innerHTML = `
-        <span style="font-size: 12px;">${isBargain ? '💎' : '🤖'}</span>
-        <span>€${aiPrice.toFixed(0)}</span>
+        <span style="font-size: 12px;">${isGoodValue ? '💎' : '🤖'}</span>
+        <span>${label}: €${aiPrice.toFixed(0)}</span>
     `;
     
     const tooltip = document.createElement('div');
@@ -136,7 +138,7 @@ function injectPriceIndicator(itemElement, analyzedItem) {
         <strong>AI Estimate: €${aiPrice.toFixed(2)}</strong><br>
         ${listedPrice > 0 ? `Listed: €${listedPrice.toFixed(2)}<br>` : ''}
         Confidence: ${confidence}%<br>
-        ${isBargain ? '<span style="color: #d4edda;">🎯 Potential Bargain!</span>' : ''}
+        ${isGoodValue ? '<span style="color: #d4edda;">🎯 Marked as Good Value</span>' : ''}
     `;
     
     indicator.addEventListener('mouseenter', (e) => {

@@ -154,6 +154,22 @@
         • Free for personal use
     </div>
 
+
+        <div class="form-group">
+            <label for="temperature">Model Temperature:</label>
+            <input type="number" id="temperature" min="0" max="2" step="0.1" value="0" placeholder="0">
+            <small style="color: #666; font-size: 0.8em;">
+                Per the <a href="https://ai.google.dev/api/generate-content" target="_blank">Gemini generationConfig docs</a>, set temperature to 0 for deterministic predictions.
+            </small>
+        </div>
+
+        <div class="form-group">
+            <label for="random-seed">Random Seed:</label>
+            <input type="number" id="random-seed" min="0" max="2147483647" value="1337" placeholder="1337">
+            <small style="color: #666; font-size: 0.8em;">
+                Using a fixed seed ensures repeatable outputs with the same prompt and settings.
+            </small>
+        </div>
     <script src="dist/settings.js"></script>
 </body>
 </html>

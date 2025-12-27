@@ -11,7 +11,17 @@ class GeminiEstimator {
         this.modelName = settings.modelName || 'gemini-2.5-flash';
         this.maxImages = settings.maxImages || 4;
         this.enableImages = settings.enableImages !== false; // Default true
+        this.temperature = this.clampNumber(settings.temperature, 0, 2, 0);
+        this.topP = this.clampNumber(settings.topP, 0, 1, 1);
+        this.topK = this.normalizeTopK(settings.topK);
+        this.randomSeed = this.normalizeSeed(settings.randomSeed);
         console.log('GeminiEstimator created with model:', this.modelName);
+        console.log('GeminiEstimator generationConfig:', {
+            temperature: this.temperature,
+            topP: this.topP,
+            topK: this.topK,
+            seed: this.randomSeed
+        });
     }
 
     async estimateValue(itemData) {
@@ -28,6 +38,8 @@ class GeminiEstimator {
 
         console.log(prompt);
         console.log('Making API call with model:', this.modelName);
+        const generationConfig = this.buildGenerationConfig();
+        console.log('Using generation config:', generationConfig);
         try {
             const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${this.modelName}:generateContent?key=${encodeURIComponent(this.apiKey)}`, {
                 method: 'POST',
@@ -37,7 +49,8 @@ class GeminiEstimator {
                         {
                             parts: parts
                         }
-                    ]
+                    ],
+                    generationConfig
                 })
             });
 
@@ -122,6 +135,19 @@ Consider when estimating value:
         }
 
         return prompt;
+    }
+
+    buildGenerationConfig() {
+        const config = {
+            temperature: this.temperature,
+            topP: this.topP,
+            candidateCount: 1,
+            seed: this.randomSeed
+        };
+        if (Number.isInteger(this.topK) && this.topK > 0) {
+            config.topK = this.topK;
+        }
+        return config;
     }
 
     parseResponse(response) {
@@ -261,6 +287,32 @@ Consider when estimating value:
             return fenceMatch[1].trim();
         }
         return text;
+    }
+
+    clampNumber(value, min, max, fallback) {
+        const num = typeof value === 'number' ? value : parseFloat(value);
+        if (!Number.isFinite(num)) {
+            return fallback;
+        }
+        if (num < min) return min;
+        if (num > max) return max;
+        return num;
+    }
+
+    normalizeSeed(value) {
+        const num = Number(value);
+        if (Number.isInteger(num) && num >= 0 && num <= 2147483647) {
+            return num;
+        }
+        return 1337;
+    }
+
+    normalizeTopK(value) {
+        const num = Number(value);
+        if (Number.isInteger(num) && num > 0) {
+            return num;
+        }
+        return undefined;
     }
 
     // Extract the first balanced {...} JSON object substring
@@ -433,9 +485,19 @@ class StorageManager {
                 chrome.storage.local.get(['analyzedItems'], (result) => {
                     try {
                         const items = result.analyzedItems || [];
+                        const listingPrice = typeof itemData.price === 'number' ? itemData.price : 0;
+                        const estimatedValue = typeof estimation?.value === 'number' ? estimation.value : 0;
+                        const calculatedGoodValue = listingPrice > 0 && estimatedValue > listingPrice;
+                        const isGoodValue = typeof itemData.isGoodValue === 'boolean' ? itemData.isGoodValue : calculatedGoodValue;
+                        const normalizedEstimation = {
+                            ...estimation,
+                            isGoodValue: typeof estimation?.isGoodValue === 'boolean' ? estimation.isGoodValue : isGoodValue
+                        };
+
                         const newItem = {
                             ...itemData,
-                            estimation: estimation,
+                            isGoodValue,
+                            estimation: normalizedEstimation,
                             analyzedAt: new Date().toISOString(),
                             id: Date.now().toString() // Simple ID generation
                         };
@@ -536,7 +598,12 @@ class StorageManager {
                     'modelName',
                     'maxImages',
                     'enableImages',
-                    'autoAnalyze'
+                    'autoAnalyze',
+                    'confidenceThreshold',
+                    'temperature',
+                    'randomSeed',
+                    'topP',
+                    'topK'
                 ], (result) => {
                     if (chrome.runtime.lastError) {
                         console.error('Error getting settings:', chrome.runtime.lastError);
@@ -547,7 +614,20 @@ class StorageManager {
                             modelName: result.modelName || 'gemini-2.5-flash',
                             maxImages: result.maxImages || 4,
                             enableImages: result.enableImages !== false,
-                            autoAnalyze: result.autoAnalyze !== false
+                            autoAnalyze: result.autoAnalyze !== false,
+                            confidenceThreshold: typeof result.confidenceThreshold === 'number'
+                                ? Math.min(Math.max(result.confidenceThreshold, 0), 100)
+                                : 70,
+                            temperature: typeof result.temperature === 'number'
+                                ? Math.min(Math.max(result.temperature, 0), 2)
+                                : 0,
+                            randomSeed: Number.isInteger(result.randomSeed) && result.randomSeed >= 0
+                                ? result.randomSeed
+                                : 1337,
+                            topP: typeof result.topP === 'number'
+                                ? Math.min(Math.max(result.topP, 0), 1)
+                                : 1,
+                            topK: Number.isInteger(result.topK) && result.topK > 0 ? result.topK : undefined
                         };
                         console.log('StorageManager.getSettings - resolved settings:', settings);
                         resolve(settings);
