@@ -31,24 +31,17 @@ class DashboardManager {
         const validItems = this.items.filter(item => !item.estimation?.error);
 
         // Price ranges (only from valid analyses)
-        const ranges = { '€0-10': 0, '€10-50': 0, '€50-100': 0, '€100+': 0 };
-        validItems.forEach(item => {
-            const price = item.price || 0;
-            if (price < 10) ranges['€0-10']++;
-            else if (price < 50) ranges['€10-50']++;
-            else if (price < 100) ranges['€50-100']++;
-            else ranges['€100+']++;
-        });
-        const maxCount = Math.max(...Object.values(ranges));
+        const priceRanges = this.computeDynamicPriceRanges(validItems);
+        const maxCount = Math.max(...priceRanges.map(range => range.count), 1);
         const priceRangesHtml = `
             <div class="bar-chart">
-                ${Object.entries(ranges).map(([range, count]) => {
+                ${priceRanges.map(({ label, count }) => {
                     const height = maxCount > 0 ? (count / maxCount) * 100 : 0;
                     return `<div class="bar-container">
                         <div class="bar" style="height: ${height}%">
                             <span class="bar-value">${count}</span>
                         </div>
-                        <span class="bar-label">${range}</span>
+                        <span class="bar-label">${label}</span>
                     </div>`;
                 }).join('')}
             </div>
@@ -316,6 +309,131 @@ class DashboardManager {
                 this.filterItems();
             }
         }
+    }
+
+    computeDynamicPriceRanges(validItems) {
+        const priceValues = validItems
+            .map(item => this.normalizePriceValue(item.price))
+            .filter(value => Number.isFinite(value) && value >= 0);
+
+        if (priceValues.length === 0) {
+            return [
+                { label: '€0-10', count: 0 },
+                { label: '€10-50', count: 0 },
+                { label: '€50-100', count: 0 },
+                { label: '€100+', count: 0 }
+            ];
+        }
+
+        const bucketCount = 4;
+        priceValues.sort((a, b) => a - b);
+
+        const boundaries = [];
+        for (let i = 0; i <= bucketCount; i++) {
+            boundaries.push(this.getQuantileValue(priceValues, i / bucketCount));
+        }
+
+        for (let i = 1; i < boundaries.length; i++) {
+            if (boundaries[i] < boundaries[i - 1]) {
+                boundaries[i] = boundaries[i - 1];
+            }
+        }
+
+        const counts = new Array(bucketCount).fill(0);
+        priceValues.forEach(price => {
+            for (let i = 0; i < bucketCount; i++) {
+                const upper = boundaries[i + 1];
+                if (i === bucketCount - 1 || price < upper || upper === boundaries[i]) {
+                    counts[i]++;
+                    break;
+                }
+            }
+        });
+
+        return counts.map((count, index) => ({
+            label: this.buildRangeLabel(boundaries[index], boundaries[index + 1], index === bucketCount - 1),
+            count
+        }));
+    }
+
+    normalizePriceValue(price) {
+        if (typeof price === 'number' && Number.isFinite(price)) {
+            return price;
+        }
+
+        if (typeof price === 'string') {
+            let normalized = price.replace(/[^0-9.,-]/g, '');
+            if (!normalized) {
+                return null;
+            }
+
+            // Remove thousands separators (dots) when followed by three digits
+            normalized = normalized.replace(/\.(?=\d{3}(?:[.,]|$))/g, '');
+
+            // If a comma exists and looks like a decimal separator, convert it
+            const commaIndex = normalized.lastIndexOf(',');
+            const dotIndex = normalized.lastIndexOf('.');
+            if (commaIndex > dotIndex) {
+                const decimals = normalized.slice(commaIndex + 1);
+                if (decimals.length <= 2) {
+                    normalized = normalized.replace(',', '.');
+                } else {
+                    normalized = normalized.replace(/,/g, '');
+                }
+            } else if (commaIndex !== -1 && dotIndex === -1) {
+                // Single comma scenario without dots
+                const decimals = normalized.slice(commaIndex + 1);
+                if (decimals.length <= 2) {
+                    normalized = normalized.replace(',', '.');
+                } else {
+                    normalized = normalized.replace(/,/g, '');
+                }
+            } else {
+                normalized = normalized.replace(/,/g, '');
+            }
+
+            const value = parseFloat(normalized);
+            return Number.isFinite(value) ? value : null;
+        }
+
+        return null;
+    }
+
+    getQuantileValue(sortedValues, quantile) {
+        if (!sortedValues.length) {
+            return 0;
+        }
+
+        const position = (sortedValues.length - 1) * quantile;
+        const base = Math.floor(position);
+        const rest = position - base;
+        const lower = sortedValues[base];
+        const upper = sortedValues[base + 1];
+
+        if (upper !== undefined) {
+            return lower + rest * (upper - lower);
+        }
+
+        return lower;
+    }
+
+    buildRangeLabel(start, end, isLastRange) {
+        const startLabel = this.formatRangeValue(start);
+        if (isLastRange) {
+            return `${startLabel}+`;
+        }
+
+        const endLabel = this.formatRangeValue(end);
+        return startLabel === endLabel ? startLabel : `${startLabel}–${endLabel}`;
+    }
+
+    formatRangeValue(value) {
+        if (!Number.isFinite(value)) {
+            return '€0';
+        }
+
+        const roundedValue = value >= 100 ? Math.round(value / 10) * 10 : Math.round(value);
+        return `€${roundedValue.toLocaleString('de-DE')}`;
     }
 }
 
