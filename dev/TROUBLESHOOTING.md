@@ -6,7 +6,7 @@
 
 1. **Reload the Extension**
    - Go to `chrome://extensions/`
-   - Find "Kleinanzeigen Monitor"
+   - Find "KleinValue Advisor"
    - Click the refresh/reload icon 🔄
    - Refresh the Kleinanzeigen page
 
@@ -53,7 +53,7 @@
 1. **Check Extension is Loaded**
    ```
    chrome://extensions/
-   ✓ Kleinanzeigen Monitor should be listed
+   ✓ KleinValue Advisor should be listed
    ✓ Toggle should be ON (blue)
    ✓ No errors shown
    ```

@@ -1,4 +1,4 @@
-// Serverless Kleinanzeigen Monitor Utilities
+// Serverless KleinValue Advisor Utilities
 // Direct Gemini API integration and Chrome Storage management
 
 

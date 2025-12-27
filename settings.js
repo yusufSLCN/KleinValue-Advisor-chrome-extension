@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const maxImagesInput = document.getElementById('max-images');
     const enableImagesCheckbox = document.getElementById('enable-images');
     const autoAnalyzeCheckbox = document.getElementById('auto-analyze');
+    const confidenceThresholdInput = document.getElementById('confidence-threshold');
     const saveButton = document.getElementById('save');
     const testButton = document.getElementById('test');
     const statusDiv = document.getElementById('status');
@@ -14,7 +15,8 @@ document.addEventListener('DOMContentLoaded', () => {
         'modelName',
         'maxImages',
         'enableImages',
-        'autoAnalyze'
+        'autoAnalyze',
+        'confidenceThreshold'
     ], (result) => {
         console.log('Settings loaded from storage:', result);
         if (result.geminiApiKey) {
@@ -32,6 +34,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (result.autoAnalyze !== undefined) {
             autoAnalyzeCheckbox.checked = result.autoAnalyze;
         }
+        if (result.confidenceThreshold !== undefined) {
+            confidenceThresholdInput.value = result.confidenceThreshold;
+        }
     });
 
     // Save settings
@@ -41,6 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const maxImages = parseInt(maxImagesInput.value);
         const enableImages = enableImagesCheckbox.checked;
         const autoAnalyze = autoAnalyzeCheckbox.checked;
+        const confidenceThreshold = parseInt(confidenceThresholdInput.value);
 
         // Validation
         if (!apiKey) {
@@ -51,12 +57,17 @@ document.addEventListener('DOMContentLoaded', () => {
             showStatus('Maximum images must be between 1 and 10', 'error');
             return;
         }
+        if (isNaN(confidenceThreshold) || confidenceThreshold < 0 || confidenceThreshold > 100) {
+            showStatus('Confidence threshold must be between 0 and 100', 'error');
+            return;
+        }
         const settings = {
             geminiApiKey: apiKey,
             modelName: modelName,
             maxImages: maxImages,
             enableImages: enableImages,
-            autoAnalyze: autoAnalyze
+            autoAnalyze: autoAnalyze,
+            confidenceThreshold: confidenceThreshold
         };
 
         console.log('Saving settings:', settings);

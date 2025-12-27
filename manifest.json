@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Kleinanzeigen Monitor",
+  "name": "KleinValue Advisor",
   "version": "1.0",
-  "description": "AI-powered item analysis for Kleinanzeigen",
+  "description": "KleinValue Advisor delivers AI-powered item analysis for Kleinanzeigen",
 
   "icons": {
     "16": "app_icon.png",
@@ -41,7 +41,7 @@
 
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Kleinanzeigen Monitor",
+    "default_title": "KleinValue Advisor",
     "default_icon": {
       "16": "app_icon.png",
       "48": "app_icon.png",

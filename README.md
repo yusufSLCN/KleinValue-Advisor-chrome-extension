@@ -1,4 +1,4 @@
-# Kleinanzeigen Monitor - Advanced AI Chrome Extension
+# KleinValue Advisor - Advanced AI Chrome Extension
 
 A powerful Chrome extension that analyzes Kleinanzeigen listings using Google's latest Gemini AI models to provide accurate market value estimates with visual analysis.
 
