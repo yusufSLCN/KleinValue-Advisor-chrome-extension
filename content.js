@@ -8,6 +8,30 @@
 // Global analyzer instance
 let analyzer = null;
 
+// Track active AI estimate popover so we can close it when clicking elsewhere
+let activeEstimateElements = null;
+
+function handleAIEstimateOutsideClick(event) {
+    if (!activeEstimateElements) {
+        return;
+    }
+
+    const { container, panel, setExpanded } = activeEstimateElements;
+    if (!container || !panel || !setExpanded) {
+        return;
+    }
+
+    if (!container.classList.contains('expanded')) {
+        return;
+    }
+
+    if (!container.contains(event.target) && !panel.contains(event.target)) {
+        setExpanded(false);
+    }
+}
+
+document.addEventListener('click', handleAIEstimateOutsideClick);
+
 // Initialize analyzer when API key is available
 async function initializeAnalyzer() {
     try {
@@ -48,14 +72,16 @@ observer.observe(document.body, {
     subtree: true
 });
 
-async function showExistingEstimation(titleElement, estimation) {
-    // Check if we already added this - remove to avoid duplicates
-    const existing = document.getElementById('ai-estimate-container');
-    if (existing) {
-        existing.remove();
+function showExistingEstimation(estimation) {
+    const priceElement = findPriceElement();
+    if (!priceElement) {
+        return;
     }
-    
-    // Find the price element (same logic as injectAIEstimate)
+
+    attachAIEstimateToPrice(priceElement, estimation);
+}
+
+function findPriceElement() {
     const priceSelectors = [
         '.ad-price',
         '[data-qa="price"]',
@@ -64,14 +90,34 @@ async function showExistingEstimation(titleElement, estimation) {
         '[class*="price"]'
     ];
 
-    let priceElement = null;
     for (const selector of priceSelectors) {
-        priceElement = document.querySelector(selector);
-        if (priceElement) break;
+        const priceElement = document.querySelector(selector);
+        if (priceElement) {
+            return priceElement;
+        }
     }
 
+    return null;
+}
+
+function attachAIEstimateToPrice(priceElement, estimation = {}) {
     if (!priceElement) {
         return;
+    }
+
+    const existingBadge = document.getElementById('ai-estimate-container');
+    if (existingBadge) {
+        existingBadge.remove();
+    }
+
+    const existingPanel = priceElement.querySelector('.ai-details-panel');
+    if (existingPanel) {
+        existingPanel.remove();
+    } else {
+        const strayPanel = document.querySelector('.ai-details-panel');
+        if (strayPanel) {
+            strayPanel.remove();
+        }
     }
 
     const value = estimation.value;
@@ -79,101 +125,63 @@ async function showExistingEstimation(titleElement, estimation) {
     const confidence = estimation.confidence || 70;
     const cost = estimation.estimatedCost;
     const isError = estimation.error === true;
+    const hasNumericValue = typeof value === 'number' && Number.isFinite(value);
+    const summaryValue = hasNumericValue ? value.toFixed(0) : 'N/A';
+    const detailedValue = hasNumericValue ? value.toFixed(2) : 'N/A';
 
-    // Create compact AI estimate badge
     const estimateContainer = document.createElement('div');
     estimateContainer.id = 'ai-estimate-container';
-    estimateContainer.style.cssText = `
-        display: inline-block;
-        margin-left: 15px;
-        padding: 2px 10px;
-        background: linear-gradient(135deg, #f0f8ff 0%, #e1f0ff 100%);
-        border: 2px solid #2196F3;
-        border-radius: 20px;
-        font-size: 15px;
-        font-weight: 600;
-        color: #1a1a1a;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        position: relative;
-    `;
-    
+    estimateContainer.className = 'ai-estimate-badge';
+
     const summaryText = document.createElement('div');
-    summaryText.innerHTML = `🤖 €${value !== null && value !== undefined ? value.toFixed(0) : 'N/A'} <span style="font-size: 10px;">▼</span>`;
+    summaryText.className = 'ai-estimate-summary';
+    summaryText.innerHTML = `🤖 €${summaryValue} <span class="ai-estimate-toggle">▼</span>`;
+    const toggleIcon = summaryText.querySelector('.ai-estimate-toggle');
     estimateContainer.appendChild(summaryText);
-    
-    // Create floating details panel
+
     const detailsPanel = document.createElement('div');
     detailsPanel.className = 'ai-details-panel';
-    detailsPanel.style.cssText = `
-        display: none;
-        position: absolute;
-        padding: 16px;
-        background: white;
-        border: 2px solid #2196F3;
-        border-radius: 12px;
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
-        z-index: 10000;
-        min-width: 400px;
-        max-width: 550px;
-        font-size: 13px;
-        font-weight: normal;
-        line-height: 1.6;
-        color: #2d2d2d;
-        top: 100%;
-        left: 0;
-        margin-top: 8px;
-    `;
     detailsPanel.innerHTML = `
-        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 2px solid #e9ecef;">
+        <div class="ai-details-header">
             <div>
-                <strong style="font-size: 18px; color: #2196F3;">AI Estimate: €${value !== null && value !== undefined ? value.toFixed(2) : 'N/A'}</strong>
-                <div style="font-size: 12px; color: #6c757d; margin-top: 4px;">Confidence: ${confidence}%</div>
+                <strong class="ai-details-title">AI Estimate: €${detailedValue}</strong>
+                <div class="ai-details-subtitle">Confidence: ${confidence}%</div>
             </div>
         </div>
-        <div style="margin-bottom: 12px;">
-            <strong style="color: #495057; font-size: 14px;">Reasoning:</strong>
-            <div style="margin-top: 6px; color: #495057; line-height: 1.5;">${reasoning || 'No reasoning provided'}</div>
+        <div class="ai-details-body">
+            <strong class="ai-details-section-title">Reasoning:</strong>
+            <div class="ai-details-section-text">${reasoning || 'No reasoning provided'}</div>
         </div>
-        <div style="padding-top: 10px; border-top: 1px solid #e9ecef; font-size: 11px; color: #6c757d;">
-            ${estimation.model ? `<div style="margin-bottom: 4px;"><strong>Model:</strong> ${estimation.model}</div>` : ''}
+        <div class="ai-details-footer">
+            ${estimation.model ? `<div><strong>Model:</strong> ${estimation.model}</div>` : ''}
             ${!isError && cost ? `<div><strong>API Cost:</strong> ${cost.formatted} (${cost.totalTokens} tokens)</div>` : ''}
         </div>
     `;
-    
+
     let expanded = false;
+    function setExpanded(state) {
+        expanded = state;
+        estimateContainer.classList.toggle('expanded', expanded);
+        detailsPanel.classList.toggle('visible', expanded);
+        if (toggleIcon) {
+            toggleIcon.textContent = expanded ? '▲' : '▼';
+        }
+    }
+
     estimateContainer.addEventListener('click', function(e) {
         e.stopPropagation();
-        expanded = !expanded;
-        if (expanded) {
-            // Make price element relative to position the panel
-            priceElement.style.position = 'relative';
-            priceElement.appendChild(detailsPanel);
-            detailsPanel.style.display = 'block';
-            summaryText.querySelector('span:last-child').textContent = '▲';
-            estimateContainer.style.background = 'linear-gradient(135deg, #d4edff 0%, #c1e4ff 100%)';
-        } else {
-            detailsPanel.style.display = 'none';
-            summaryText.querySelector('span:last-child').textContent = '▼';
-            estimateContainer.style.background = 'linear-gradient(135deg, #f0f8ff 0%, #e1f0ff 100%)';
-        }
-    });
-    
-    // Close when clicking outside
-    document.addEventListener('click', function(e) {
-        if (!estimateContainer.contains(e.target) && !detailsPanel.contains(e.target) && expanded) {
-            expanded = false;
-            detailsPanel.style.display = 'none';
-            summaryText.querySelector('span:last-child').textContent = '▼';
-            estimateContainer.style.background = 'linear-gradient(135deg, #f0f8ff 0%, #e1f0ff 100%)';
-        }
+        setExpanded(!expanded);
     });
 
-    // Insert inline next to price
-    priceElement.style.display = 'flex';
-    priceElement.style.alignItems = 'center';
-    priceElement.style.flexWrap = 'wrap';
+    priceElement.classList.add('ai-price-wrapper');
     priceElement.appendChild(estimateContainer);
+    priceElement.appendChild(detailsPanel);
+
+    activeEstimateElements = {
+        container: estimateContainer,
+        panel: detailsPanel,
+        setExpanded
+    };
 }
 
 function injectAIAnalysisButton() {
@@ -192,29 +200,8 @@ function injectAIAnalysisButton() {
     // Create button
     const button = document.createElement('button');
     button.id = 'ai-analyze-button';
+    button.className = 'ai-analyze-button';
     button.innerHTML = '&#129302; Analyze with AI';
-    button.style.cssText = `
-        background: linear-gradient(45deg, #007bff, #0056b3);
-        color: white;
-        border: none;
-        padding: 8px 16px;
-        border-radius: 20px;
-        cursor: pointer;
-        font-size: 14px;
-        margin-bottom: 5px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        transition: all 0.2s;
-    `;
-
-    button.addEventListener('mouseenter', function() {
-        this.style.transform = 'translateY(-1px)';
-        this.style.boxShadow = '0 4px 8px rgba(0,0,0,0.15)';
-    });
-
-    button.addEventListener('mouseleave', function() {
-        this.style.transform = 'translateY(0)';
-        this.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
-    });
 
     // Check if this item has already been analyzed and update button accordingly
     const pageUrl = window.location.href;
@@ -224,11 +211,11 @@ function injectAIAnalysisButton() {
         if (existingItem && existingItem.estimation && !existingItem.estimation.error) {
             // Item has been analyzed before - update button text and style
             button.innerHTML = '&#128257; Re-analyze';
-            button.style.background = 'linear-gradient(45deg, #28a745, #1e7e34)';
+            button.classList.add('ai-analyze-button--repeat');
             button.title = 'This item has already been analyzed. Click to re-analyze.';
             
             // Show the existing AI estimation
-            showExistingEstimation(titleElement, existingItem.estimation);
+            showExistingEstimation(existingItem.estimation);
         }
     }).catch(error => {
         if (error.message.includes('Extension context invalidated')) {
@@ -283,8 +270,12 @@ function injectAIAnalysisButton() {
             }
         }
 
+        const hadRepeatStyle = this.classList.contains('ai-analyze-button--repeat');
+
         // Disable button and show loading
         this.disabled = true;
+        this.classList.add('loading');
+        this.classList.remove('ai-analyze-button--repeat');
         this.innerHTML = '&#128257; Analyzing...';
 
         try {
@@ -313,6 +304,8 @@ function injectAIAnalysisButton() {
             }
 
             // Show success and keep as re-analyze
+            this.classList.remove('loading');
+            this.classList.add('ai-analyze-button--repeat');
             this.innerHTML = '&#9989; Analyzed!';
             setTimeout(() => {
                 this.innerHTML = '&#128257; Re-analyze';
@@ -352,6 +345,10 @@ function injectAIAnalysisButton() {
                     }
                 }
                 injectAIEstimate(errorEstimation);
+            }
+            this.classList.remove('loading');
+            if (hadRepeatStyle) {
+                this.classList.add('ai-analyze-button--repeat');
             }
             this.innerHTML = '&#128257; Re-analyze';
             this.disabled = false;
@@ -1008,130 +1005,11 @@ function extractProductDetails() {
     return null;
 }
 
-async function injectAIEstimate(estimation) {
-    // Remove any existing AI estimate
-    const existingEstimate = document.getElementById('ai-estimate-container');
-    if (existingEstimate) {
-        existingEstimate.remove();
-    }
-
-    // Find the price element
-    const priceSelectors = [
-        '.ad-price',
-        '[data-qa="price"]',
-        '.price',
-        '.aditem-price',
-        '[class*="price"]'
-    ];
-
-    let priceElement = null;
-    for (const selector of priceSelectors) {
-        priceElement = document.querySelector(selector);
-        if (priceElement) break;
-    }
-
+function injectAIEstimate(estimation) {
+    const priceElement = findPriceElement();
     if (!priceElement) {
         return;
     }
 
-    const value = estimation.value;
-    const reasoning = estimation.reasoning;
-    const confidence = estimation.confidence || 70;
-    const cost = estimation.estimatedCost;
-    const isError = estimation.error === true;
-
-    // Create compact AI estimate badge
-    const estimateContainer = document.createElement('div');
-    estimateContainer.id = 'ai-estimate-container';
-    estimateContainer.style.cssText = `
-        display: inline-block;
-        margin-left: 15px;
-        padding: 6px 12px;
-        background: linear-gradient(135deg, #f0f8ff 0%, #e1f0ff 100%);
-        border: 2px solid #2196F3;
-        border-radius: 20px;
-        font-size: 13px;
-        font-weight: 600;
-        color: #1a1a1a;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        position: relative;
-    `;
-    
-    const summaryText = document.createElement('div');
-    summaryText.innerHTML = `🤖 €${value !== null && value !== undefined ? value.toFixed(0) : 'N/A'} <span style="font-size: 10px;">▼</span>`;
-    estimateContainer.appendChild(summaryText);
-    
-    // Create floating details panel
-    const detailsPanel = document.createElement('div');
-    detailsPanel.className = 'ai-details-panel';
-    detailsPanel.style.cssText = `
-        display: none;
-        position: absolute;
-        padding: 16px;
-        background: white;
-        border: 2px solid #2196F3;
-        border-radius: 12px;
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
-        z-index: 10000;
-        min-width: 400px;
-        max-width: 550px;
-        font-size: 13px;
-        font-weight: normal;
-        line-height: 1.6;
-        color: #2d2d2d;
-        top: 100%;
-        left: 0;
-        margin-top: 8px;
-    `;
-    detailsPanel.innerHTML = `
-        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 2px solid #e9ecef;">
-            <div>
-                <strong style="font-size: 18px; color: #2196F3;">AI Estimate: €${value !== null && value !== undefined ? value.toFixed(2) : 'N/A'}</strong>
-                <div style="font-size: 12px; color: #6c757d; margin-top: 4px;">Confidence: ${confidence}%</div>
-            </div>
-        </div>
-        <div style="margin-bottom: 12px;">
-            <strong style="color: #495057; font-size: 14px;">Reasoning:</strong>
-            <div style="margin-top: 6px; color: #495057; line-height: 1.5;">${reasoning || 'No reasoning provided'}</div>
-        </div>
-        <div style="padding-top: 10px; border-top: 1px solid #e9ecef; font-size: 11px; color: #6c757d;">
-            ${estimation.model ? `<div style="margin-bottom: 4px;"><strong>Model:</strong> ${estimation.model}</div>` : ''}
-            ${!isError && cost ? `<div><strong>API Cost:</strong> ${cost.formatted} (${cost.totalTokens} tokens)</div>` : ''}
-        </div>
-    `;
-    
-    let expanded = false;
-    estimateContainer.addEventListener('click', function(e) {
-        e.stopPropagation();
-        expanded = !expanded;
-        if (expanded) {
-            // Make price element relative to position the panel
-            priceElement.style.position = 'relative';
-            priceElement.appendChild(detailsPanel);
-            detailsPanel.style.display = 'block';
-            summaryText.querySelector('span:last-child').textContent = '▲';
-            estimateContainer.style.background = 'linear-gradient(135deg, #d4edff 0%, #c1e4ff 100%)';
-        } else {
-            detailsPanel.style.display = 'none';
-            summaryText.querySelector('span:last-child').textContent = '▼';
-            estimateContainer.style.background = 'linear-gradient(135deg, #f0f8ff 0%, #e1f0ff 100%)';
-        }
-    });
-    
-    // Close when clicking outside
-    document.addEventListener('click', function(e) {
-        if (!estimateContainer.contains(e.target) && !detailsPanel.contains(e.target) && expanded) {
-            expanded = false;
-            detailsPanel.style.display = 'none';
-            summaryText.querySelector('span:last-child').textContent = '▼';
-            estimateContainer.style.background = 'linear-gradient(135deg, #f0f8ff 0%, #e1f0ff 100%)';
-        }
-    });
-
-    // Insert inline next to price
-    priceElement.style.display = 'flex';
-    priceElement.style.alignItems = 'center';
-    priceElement.style.flexWrap = 'wrap';
-    priceElement.appendChild(estimateContainer);
+    attachAIEstimateToPrice(priceElement, estimation);
 }

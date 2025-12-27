@@ -92,75 +92,44 @@ function injectPriceIndicator(itemElement, analyzedItem) {
     const isGoodValue = storedGoodValue !== undefined ? storedGoodValue : computedGoodValue;
     const label = isGoodValue ? 'Good Value' : 'AI Estimate';
     
+    const displayEstimate = typeof aiPrice === 'number' && Number.isFinite(aiPrice) ? aiPrice : null;
+    const summarizedEstimate = displayEstimate !== null ? displayEstimate.toFixed(0) : 'N/A';
+    const detailedEstimate = displayEstimate !== null ? displayEstimate.toFixed(2) : 'N/A';
+
     const indicator = document.createElement('div');
     indicator.className = 'ai-price-indicator';
-    indicator.style.cssText = `
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        margin-left: 8px;
-        padding: 3px 8px;
-        background: ${isGoodValue ? 'linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%)' : 'linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%)'};
-        border: 1px solid ${isGoodValue ? '#28a745' : '#adb5bd'};
-        border-radius: 12px;
-        font-size: 11px;
-        font-weight: 600;
-        color: ${isGoodValue ? '#155724' : '#495057'};
-        cursor: help;
-        transition: all 0.2s ease;
-        white-space: nowrap;
-    `;
-    
+    indicator.classList.toggle('good-value', isGoodValue);
     indicator.innerHTML = `
-        <span style="font-size: 12px;">${isGoodValue ? '💎' : '🤖'}</span>
-        <span>${label}: €${aiPrice.toFixed(0)}</span>
+        <span class="ai-price-indicator__icon">${isGoodValue ? '💎' : '🤖'}</span>
+        <span class="ai-price-indicator__label">${label}: €${summarizedEstimate}</span>
     `;
-    
+
     const tooltip = document.createElement('div');
     tooltip.className = 'ai-price-tooltip';
-    tooltip.style.cssText = `
-        position: absolute;
-        display: none;
-        background: rgba(0, 0, 0, 0.95);
-        color: white;
-        padding: 10px 12px;
-        border-radius: 6px;
-        font-size: 11px;
-        line-height: 1.5;
-        z-index: 10000;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-        max-width: 250px;
-        white-space: normal;
-        pointer-events: none;
-    `;
-    
     tooltip.innerHTML = `
-        <strong>AI Estimate: €${aiPrice.toFixed(2)}</strong><br>
+        <strong>AI Estimate: €${detailedEstimate}</strong><br>
         ${listedPrice > 0 ? `Listed: €${listedPrice.toFixed(2)}<br>` : ''}
         Confidence: ${confidence}%<br>
-        ${isGoodValue ? '<span style="color: #d4edda;">🎯 Marked as Good Value</span>' : ''}
+        ${isGoodValue ? '<span class="ai-price-tooltip__good">🎯 Marked as Good Value</span>' : ''}
     `;
-    
-    indicator.addEventListener('mouseenter', (e) => {
-        indicator.style.transform = 'scale(1.05)';
-        indicator.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.15)';
-        document.body.appendChild(tooltip);
-        tooltip.style.display = 'block';
+
+    indicator.addEventListener('mouseenter', () => {
+        if (!document.body.contains(tooltip)) {
+            document.body.appendChild(tooltip);
+        }
+        tooltip.classList.add('visible');
         const rect = indicator.getBoundingClientRect();
-        tooltip.style.top = (rect.top - tooltip.offsetHeight - 8 + window.scrollY) + 'px';
-        tooltip.style.left = (rect.left + rect.width / 2 - tooltip.offsetWidth / 2 + window.scrollX) + 'px';
+        tooltip.style.top = `${rect.top - tooltip.offsetHeight - 8 + window.scrollY}px`;
+        tooltip.style.left = `${rect.left + rect.width / 2 - tooltip.offsetWidth / 2 + window.scrollX}px`;
     });
-    
+
     indicator.addEventListener('mouseleave', () => {
-        indicator.style.transform = 'scale(1)';
-        indicator.style.boxShadow = 'none';
+        tooltip.classList.remove('visible');
         if (tooltip.parentNode) {
             tooltip.parentNode.removeChild(tooltip);
         }
     });
-    
-    priceElement.style.display = 'flex';
-    priceElement.style.alignItems = 'center';
-    priceElement.style.flexWrap = 'wrap';
+
+    priceElement.classList.add('ai-price-wrapper');
     priceElement.appendChild(indicator);
 }
