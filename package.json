@@ -1,12 +1,11 @@
 {
-  "name": "chrome_extension",
-  "version": "1.0.0",
-  "description": "",
+  "name": "kleinvalue-advisor",
+  "version": "0.9.0",
+  "description": "AI-powered Chrome extension for valuing Kleinanzeigen listings with Gemini, GPT-4o, and Claude.",
   "main": "content.js",
   "scripts": {
     "build": "webpack --mode=production",
-    "dev": "webpack --mode=development --watch",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "webpack --mode=development --watch"
   },
   "devDependencies": {
     "@babel/core": "^7.23.0",
@@ -18,8 +17,19 @@
     "webpack-cli": "^5.1.4"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Yusuf Salcan",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yusufsalcan/kleinvalue-advisor"
+  },
+  "bugs": {
+    "url": "https://github.com/yusufsalcan/kleinvalue-advisor/issues"
+  },
+  "homepage": "https://github.com/yusufsalcan/kleinvalue-advisor#readme",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "type": "commonjs",
   "dependencies": {
     "@babel/runtime": "^7.28.4",

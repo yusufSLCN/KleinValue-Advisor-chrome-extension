@@ -1,184 +1,139 @@
-# KleinValue Advisor - Advanced AI Chrome Extension
+# KleinValue Advisor
 
-A powerful Chrome extension that analyzes Kleinanzeigen listings using Google Gemini, OpenAI GPT-4o/4.1, or Anthropic Claude models—complete with dynamic model catalogs, visual analysis, and transparent cost tracking.
+AI-powered Chrome extension for analyzing Kleinanzeigen listings with Google Gemini, OpenAI GPT-4o/4.1, and Anthropic Claude. The extension injects a valuation UI directly into listings, augments search results, and ships with a modern dashboard plus settings surface for multi-provider management.
 
-## ✨ Key Features
+> **Status:** Actively iterated. Automated tests are scheduled for a future milestone, but the build/lint toolchain is already in place.
 
-### 🔌 Multi-Provider Flexibility
-- **One UI, Three Providers**: Seamlessly switch between Google Gemini, OpenAI GPT-4o/4.1, or Anthropic Claude without leaving the extension.
-- **Live Model Catalogs**: Fetch the latest deployable models directly from each provider's API and pin your favorites per provider.
-- **Per-Provider API Keys**: Securely store different API keys and model selections; the estimator automatically loads the right backend at runtime.
+## Table of Contents
 
-### 🤖 Advanced AI Analysis
-- **Latest Foundation Models**: Choose between Gemini 2.5 (Flash/Pro/Lite), GPT-4.1 / GPT-4o variants, or Claude 3.5 families
-- **Visual Analysis**: AI analyzes product images for condition, quality, and features
-- **Confidence Scoring**: Real confidence scores (0-100) surfaced on every estimate
-- **Smart Image Processing**: Automatically finds and processes all product images
-- **Search Page Integration**: AI price indicators appear on search results for analyzed items
-- **Bargain Detection**: Automatic highlighting of potential deals on search pages
+1. [Highlights](#highlights)
+2. [Screens & Modules](#screens--modules)
+3. [Getting Started](#getting-started)
+4. [Configuration](#configuration)
+5. [Available Scripts](#available-scripts)
+6. [Structure & Assets](#structure--assets)
+7. [Tech Stack](#tech-stack)
+8. [Roadmap](#roadmap)
+9. [Contributing](#contributing)
+10. [License](#license)
 
-### 📊 Modern Dashboard
-- **Elegant Design**: Clean, intuitive interface following modern UI/UX principles
-- **Expandable Statistics**: Collapsible stats section with key metrics
-- **Powerful Search**: Real-time search across titles, locations, and AI reasoning
-- **Individual Item Management**: Remove specific items with dedicated delete buttons
-- **Responsive Layout**: Optimized for all screen sizes
+## Highlights
 
-### ⚙️ Comprehensive Settings
-- **Provider Studio**: Gradient-rich settings surface with provider cards, contextual docs links, and per-provider API key management
-- **Live Model Picker**: Refresh model lists straight from each provider's API and persist selections separately
-- **Analysis Controls**: Configure temperature, image usage, and automation in a single responsive grid
-- **One-Click Testing**: Validate keys and fetch models simultaneously with real-time status banners
+- **Multi-provider AI studio:** Hot-swap between Gemini, GPT-4o/4.1, and Claude 3.5 with dedicated key/model storage and live catalog fetching.
+- **Vision-first valuations:** Pulls listing images, runs multimodal prompts, and surfaces structured price, confidence, and reasoning.
+- **Search & dashboard integration:** Shows cached AI estimates inline on Kleinanzeigen search results and in an analytics dashboard with filters and stats.
+- **Cost & transparency:** Displays provider costs, token usage, and confidence for every run so users know when to trust or renegotiate.
+- **Modern toolchain:** Webpack + Babel bundling, ESLint/Prettier, and environment-ready configuration to keep the codebase healthy as it grows.
 
-### 💰 Cost Transparency
-- **Real-time Cost Tracking**: Shows actual API costs per analysis
-- **Token Usage**: Displays input/output tokens consumed
-- **Pricing Updates**: Latest 2025 Gemini API pricing
-- **Cost Optimization**: Choose models based on speed vs. accuracy needs
+## Screens & Modules
 
-### 🔧 Technical Excellence
-- **Serverless Architecture**: All processing happens client-side
-- **Local Storage**: Data persists securely in Chrome storage
-- **Modular Design**: Clean, maintainable codebase with webpack bundling and shared `lib/` modules for estimator, storage, and factory logic
-- **Provider Registry**: Central metadata + estimator registry powers multi-provider switching without code duplication
-- **Error Handling**: Robust error handling and fallback mechanisms
+| Surface | Description |
+| --- | --- |
+| **Listing injection** | Adds an "🤖 Analyze with AI" entry point, displays the latest valuation, and shows cost & reasoning on demand. |
+| **Search assist** | Annotates Kleinanzeigen search results for items already analyzed (with bargain highlighting). |
+| **Dashboard** | Grid of analyzed items with search, statistics toggle, and per-item removal. |
+| **Settings** | Gradient-rich provider studio with API key entry, live model refresh, analysis controls, and automation toggles. |
+| **Popup** | Quick glance list of recent valuations plus shortcuts to dashboard/settings. |
 
-## 🚀 Quick Start
+## Getting Started
 
-### Installation
-1. **Install Dependencies**
-   ```bash
-   npm install
-   ```
+```bash
+git clone https://github.com/yusufsalcan/kleinvalue-advisor.git
+cd kleinvalue-advisor
+npm install
+npm run build
+```
 
-2. **Build the Extension**
-   ```bash
-   npm run build
-   ```
+Load the generated bundle at `chrome://extensions` using **Load unpacked** (ensure Developer Mode is enabled).
 
-3. **Load in Chrome**
-   - Open `chrome://extensions/`
-   - Enable "Developer mode"
-   - Click "Load unpacked"
-   - Select the `chrome_extension` folder
+## Configuration
 
-### Configuration
-1. **API Key Setup**
-   - Click the extension icon in Chrome toolbar
-   - Open the settings (⚙️) panel
-   - Select your preferred provider card (Gemini, OpenAI, or Anthropic)
-   - Paste the corresponding API key and run **Test Key** to fetch the live model list
+All provider keys are entered and stored inside the extension settings UI. There is no `.env` file to maintain because the extension never reads environment variables at runtime; keep secrets in your browser profile or a secrets manager for CI packaging.
 
-2. **Customize Settings**
-   - Pick a model per provider (e.g., Gemini 2.5 Flash, GPT-4.1 Mini, or Claude 3.5 Sonnet)
-   - Tune auto-analysis behavior, temperature, and image usage in the Analysis Controls block
-   - Refresh models anytime to stay current with the provider's catalog
+## Available Scripts
 
-## 📖 How to Use
+| Command | Description |
+| --- | --- |
+| `npm run dev` | Development build with watch mode. |
+| `npm run build` | Production bundle used for packaging the extension. |
+| `npm run lint` | ESLint across the repo (browser + WebExtension aware). |
+| `npm run format` | Prettier auto-format for JS/HTML/CSS/JSON/Markdown. |
+| `npm run format:check` | Prettier in read-only mode for CI. |
 
-### Basic Analysis
-1. **Visit any Kleinanzeigen listing**
-2. **Click "🤖 Analyze with AI"** button (appears automatically on item pages)
-3. **View AI estimate** with confidence score and reasoning
-4. **Click "Show Details"** for full analysis including API cost
+Automated tests will arrive in a future release (`npm test` is intentionally omitted for now).
 
-### Search Page Price Indicators
-- **💎 Smart Icons**: AI price badges appear automatically on search results for items you've already analyzed
-- **Bargain Detection**: Special highlighting for potential deals (AI price 20%+ higher than listing)
-- **Quick Tooltips**: Hover over any price icon to see full AI estimate and confidence score
-- **No Extra Analysis**: Shows cached results instantly - no additional API calls needed
+## Structure & Assets
 
-### Dashboard Features
-- **📊 Expandable Statistics**: Click "Show Statistics" for overview metrics with smooth animations
-- **🔍 Real-time Search**: Instant search across titles, locations, and AI reasoning
-- **🗑️ Individual Item Management**: Delete specific items with dedicated remove buttons
-- **💰 Price Comparison**: See both listing price and AI estimate side-by-side
-- **ℹ️ AI Reasoning Tooltips**: Hover over info icon for detailed AI reasoning
-- **📱 Responsive Design**: Optimized for desktop and mobile devices
-- **🎨 Modern UI**: Clean, intuitive interface with smooth hover effects
-
-### Advanced Features
-- **Visual Analysis**: AI examines product images for accurate assessments
-- **Confidence Display**: Always shows AI certainty scores alongside values
-- **Cost Tracking**: Monitor API usage and costs in real-time
-- **Model Selection**: Choose different AI models for speed vs. accuracy
-- **Smart Image Processing**: Automatic image discovery and filtering
-- **Price Comparison**: Instant comparison between listing and AI estimate
-- **Interactive Reasoning**: Hover tooltips for detailed AI explanations
-
-## 🛠️ Development
-
-### Commands
-- `npm run dev` - Development mode with file watching
-- `npm run build` - Production build with minification & asset copying
-
-### Architecture
-- **🤖 AI-First**: Live provider registry spanning Gemini 2.5, GPT-4.1/4o, and Claude 3.5 families
-- **🎨 Modern UI**: Responsive design with smooth animations
-- **🔒 Privacy-Focused**: All data stored locally, no external servers
-- **⚡ Performance**: Optimized bundling and efficient API usage
-- **🧩 Modular**: Clean separation of concerns with ES modules
-- **📦 Best Practices**: External CSS, webpack asset copying, organized file structure
-
-## 📁 Project Structure
+### Code Layout
 
 ```
-chrome_extension/
-├── manifest.json          # Extension configuration & permissions
-├── lib/                  # Shared estimators, storage, and provider registry
-│   ├── gemini-estimator.js
-│   ├── openai-estimator.js
-│   ├── anthropic-estimator.js
+├── background.js
+├── content/
+│   ├── analyze-button.js
+│   ├── data-extractor.js
+│   └── estimate-ui.js
+├── content.js
+├── content-search.js
+├── dashboard.(html|css|js)
+├── lib/
 │   ├── estimation-core.js
+│   ├── estimator-factory.js
 │   ├── providers/
 │   │   ├── metadata.js
 │   │   └── registry.js
 │   ├── storage-manager.js
-│   └── index.js
-├── content.js            # Injects analysis UI on Kleinanzeigen pages
-├── utils.js              # Re-exports shared modules for backward compatibility
-├── popup.html/js         # Compact extension popup
-├── dashboard.html/js     # Modern dashboard with search, stats, & management
-├── dashboard.css         # External styles for dashboard (best practices)
-├── settings.html/js      # Comprehensive configuration panel
-└── dist/                 # Built assets (auto-generated)
+│   └── {anthropic,gemini,openai}-estimator.js
+├── popup.(html|css|js)
+├── settings.(html|css|js)
+├── dev/
+│   └── deployment.md
+├── dist/
+├── utils.js
+├── webpack.config.js
+├── app_icon.png
+└── 440851db-7bc4-4ccc-b508-ffb208d2f49a.png
 ```
 
-## 🔑 API Configuration
+- `content/` holds the modularized content script pieces that inject UI, extract listing data, and dispatch estimations.
+- `lib/` centralizes estimator implementations, provider metadata/registry wiring, and `storage-manager` abstractions shared across extension surfaces.
+- `dev/` contains deployment docs (currently `deployment.md`) outlining store submission prep.
+- `dist/` is generated by `npm run build` and is the only folder you ship to Chrome Web Store along with `manifest.json` and static HTML/CSS.
+- `app_icon.png` and the additional PNG act as base art for deriving Chrome Web Store icons/screenshots.
 
-### Getting API Keys
-- **Google Gemini**: https://aistudio.google.com/app/apikey
-- **OpenAI Platform**: https://platform.openai.com/api-keys
-- **Anthropic Claude**: https://console.anthropic.com/account/keys
+### Store & Promo Assets
 
-### Rate Limits (Reference)
-- **Gemini Free Tier**: 60 requests/minute • 1,500 requests/day • Free for personal use
-- **OpenAI & Anthropic**: Follow the quota shown in your provider console (varies per billing plan)
+- Maintain icon derivatives at 16/32/48/128 px (PNG with transparent background). Base them on `app_icon.png` for brand consistency and reference the detailed checklist in `dev/deployment.md`.
+- Capture at least three 1280×800 (or 640×400) screenshots: popup, dashboard, and on-page analysis states. Keep Kleinanzeigen content anonymized or blurred.
+- Prepare a short description (<132 characters) and a longer narrative describing multi-provider AI analysis, as outlined in the "Store Listing Content" section of `dev/deployment.md`.
+- Keep editable design sources (Figma/PSD) alongside the PNGs locally so icon/screenshot refreshes stay painless when the UI evolves.
 
-### Model Recommendations
-- **Gemini 2.5 Flash**: Best balance of speed and accuracy (defaults in settings)
-- **GPT-4.1 Mini**: Fast GPT family member with excellent reasoning, great for text-heavy listings
-- **Claude 3.5 Sonnet**: Strong structured reasoning with concise JSON responses
-- **Gemini 2.5 Pro**: Maximum intelligence for complex items requiring multimodal context
+## Tech Stack
 
-## 🎯 Advanced Features
+- **Build:** Webpack 5 + Babel.
+- **Language:** Modern JavaScript (ES2021) bundled for Manifest V3.
+- **Styling:** Plain CSS with intentional gradients and responsive layouts.
+- **AI Providers:** Google Gemini (`@google/genai`), OpenAI REST API, Anthropic REST API.
+- **Storage:** Chrome `storage.local` abstractions via `lib/storage-manager`.
 
-### AI Confidence System
-- Real confidence scores surfaced directly from each provider
-- Always displayed with every estimate for transparency
-- Helps you decide when to trust, retry, or compare listings
+## Roadmap
 
-### Cost Optimization
-- Automatic cost calculation per request
-- Token usage tracking
-- Model selection based on cost vs. performance
+- [ ] Automated unit tests for estimator core & storage manager.
+- [ ] Continuous integration (GitHub Actions) running `lint` and `build`.
+- [ ] Optional env-driven secrets for CI packaging.
+- [ ] Polish on popup/dashboard animations.
 
-### Smart Image Processing
-- Automatic image discovery and filtering
-- Size-based filtering (excludes icons)
-- Base64 encoding for API compatibility
-- Configurable image limits
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for local setup, coding standards, and commit guidelines. In short:
+
+1. Fork & branch (`feat/<short-description>`).
+2. Run `npm run lint` and `npm run format:check` before pushing.
+3. Submit a PR with screenshots/GIFs for UI changes.
+
+## License
+
+This project is distributed under the [MIT License](LICENSE).
 
 ---
 
-**Made with ❤️ for Kleinanzeigen users who want data-driven buying decisions**
+**Made with ❤️ for Kleinanzeigen buyers who want data-driven decisions.**
