@@ -24,10 +24,10 @@ function loadAnalyzedItems() {
             return;
         }
 
-        // Sort items by most recent analysis time (analyzed_at) in descending order
+        // Sort items by most recent analysis time (analyzedAt) in descending order
         analyzedItems.sort(function(a, b) {
-            const timeA = a.analyzed_at ? new Date(a.analyzed_at) : new Date(0);
-            const timeB = b.analyzed_at ? new Date(b.analyzed_at) : new Date(0);
+            const timeA = getAnalyzedDate(a)?.getTime() || 0;
+            const timeB = getAnalyzedDate(b)?.getTime() || 0;
             return timeB - timeA; // Most recent first
         });
 
@@ -54,9 +54,25 @@ function loadAnalyzedItems() {
             contentDiv.className = 'item-content';
 
             // Title
-            const title = document.createElement('div');
-            title.className = 'item-title';
-            title.textContent = item.title;
+            const titleLink = document.createElement('a');
+            titleLink.className = 'item-title';
+            titleLink.href = item.url;
+            titleLink.target = '_blank';
+            titleLink.rel = 'noopener noreferrer';
+            titleLink.textContent = item.title;
+
+            const analyzedDate = getAnalyzedDate(item);
+            const metaParts = [];
+            if (item.location && item.location !== 'Unknown') {
+                metaParts.push(`📍 ${item.location}`);
+            }
+            if (analyzedDate) {
+                metaParts.push(`Analyzed ${formatAnalyzedDate(analyzedDate)}`);
+            }
+
+            const metaLine = document.createElement('div');
+            metaLine.className = 'item-meta';
+            metaLine.textContent = metaParts.join('\n');
 
             // Prices
             const pricesDiv = document.createElement('div');
@@ -86,11 +102,6 @@ function loadAnalyzedItems() {
             }
             pricesDiv.appendChild(aiPrice);
 
-            // Location
-            const location = document.createElement('div');
-            location.className = 'item-location';
-            location.textContent = item.location && item.location !== 'Unknown' ? `&#128205; ${item.location}` : '';
-
             // Reasoning (truncated)
             const reasoning = document.createElement('div');
             reasoning.className = 'item-reasoning';
@@ -100,27 +111,41 @@ function loadAnalyzedItems() {
                 reasoning.textContent = 'No reasoning available';
             }
 
-            // URL
-            const urlLink = document.createElement('a');
-            urlLink.className = 'item-url';
-            urlLink.href = item.url;
-            urlLink.textContent = 'View Listing';
-            urlLink.target = '_blank';
-
             // Assemble the card
-            contentDiv.appendChild(title);
-            contentDiv.appendChild(pricesDiv);
-            if (location.textContent) {
-                contentDiv.appendChild(location);
+            contentDiv.appendChild(titleLink);
+            if (metaLine.textContent) {
+                contentDiv.appendChild(metaLine);
             }
+            contentDiv.appendChild(pricesDiv);
             contentDiv.appendChild(reasoning);
-            contentDiv.appendChild(urlLink);
 
             itemCard.appendChild(image);
             itemCard.appendChild(contentDiv);
 
             itemsContainer.appendChild(itemCard);
         });
+    });
+}
+
+function getAnalyzedDate(item) {
+    const raw = item?.analyzedAt || item?.analyzed_at;
+    if (!raw) {
+        return null;
+    }
+    const parsed = new Date(raw);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function formatAnalyzedDate(dateObj) {
+    if (!dateObj || Number.isNaN(dateObj.getTime())) {
+        return '';
+    }
+    return dateObj.toLocaleString('de-DE', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
     });
 }
 

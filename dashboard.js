@@ -185,7 +185,7 @@ class DashboardManager {
                         View
                     </a>
                     <button class="btn-danger remove-btn" data-item-id="${item.id || item.url}">
-                        <span>🗑️</span>
+                        <span>&times;</span>
                     </button>
                 </div>
                 <div class="reasoning-tooltip">${reasoningText}</div>
