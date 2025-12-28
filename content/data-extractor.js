@@ -32,10 +32,13 @@ function extractItemData() {
     if (structuredData && structuredData.title) {
         title = structuredData.title;
     } else {
-        title = (document.querySelector('h1.adtitle') ||
-                  document.querySelector('.ad-titles h1') ||
-                  document.querySelector('h1') ||
-                  document.querySelector('[data-qa="ad-title"]'))?.textContent?.trim() || '';
+        title =
+            (
+                document.querySelector('h1.adtitle') ||
+                document.querySelector('.ad-titles h1') ||
+                document.querySelector('h1') ||
+                document.querySelector('[data-qa="ad-title"]')
+            )?.textContent?.trim() || '';
     }
 
     // Clean up title by removing status indicators
@@ -88,7 +91,8 @@ function extractItemData() {
                     description = description.replace(/\s+/g, ' ');
                     description = description.replace(/\n+/g, ' ');
 
-                    if (description && description.length > 10) { // Ensure we have meaningful content
+                    if (description && description.length > 10) {
+                        // Ensure we have meaningful content
                         console.log('📝 Description from fallback selector:', description);
                         break;
                     }
@@ -148,9 +152,11 @@ function extractItemData() {
                 try {
                     const jsonData = JSON.parse(element.textContent);
                     if (jsonData.location && jsonData.location.address) {
-                        extractedLocation = jsonData.location.address.addressLocality ||
-                                          jsonData.location.address.addressRegion ||
-                                          jsonData.location.address.addressCountry || '';
+                        extractedLocation =
+                            jsonData.location.address.addressLocality ||
+                            jsonData.location.address.addressRegion ||
+                            jsonData.location.address.addressCountry ||
+                            '';
                     }
                 } catch (e) {
                     // Silently ignore JSON parsing errors
@@ -162,7 +168,10 @@ function extractItemData() {
             // Clean up the location text
             if (extractedLocation) {
                 // Remove common prefixes
-                extractedLocation = extractedLocation.replace(/^(Standort|Location|Adresse|Ort|Stadt):\s*/i, '');
+                extractedLocation = extractedLocation.replace(
+                    /^(Standort|Location|Adresse|Ort|Stadt):\s*/i,
+                    ''
+                );
                 // More aggressive location cleaning
                 extractedLocation = extractedLocation.split('\n')[0]; // Take only first line
                 extractedLocation = extractedLocation.split('Bei Interesse')[0]; // Remove contact text
@@ -182,8 +191,39 @@ function extractItemData() {
                 extractedLocation = extractedLocation.trim();
 
                 // Final cleanup - remove any remaining unwanted words
-                const unwantedWords = ['Bei', 'Interesse', 'einfach', 'melden', 'kontakt', 'anzeige', 'verkauf', 'preis', 'telefon', 'email', 'wird', 'ist', 'hat', 'der', 'die', 'das', 'und', 'oder', 'mit', 'auf', 'für', 'von', 'zu', 'im', 'am', 'um', 'aus'];
-                extractedLocation = extractedLocation.split(' ').filter(word => !unwantedWords.includes(word.toLowerCase())).join(' ');
+                const unwantedWords = [
+                    'Bei',
+                    'Interesse',
+                    'einfach',
+                    'melden',
+                    'kontakt',
+                    'anzeige',
+                    'verkauf',
+                    'preis',
+                    'telefon',
+                    'email',
+                    'wird',
+                    'ist',
+                    'hat',
+                    'der',
+                    'die',
+                    'das',
+                    'und',
+                    'oder',
+                    'mit',
+                    'auf',
+                    'für',
+                    'von',
+                    'zu',
+                    'im',
+                    'am',
+                    'um',
+                    'aus'
+                ];
+                extractedLocation = extractedLocation
+                    .split(' ')
+                    .filter((word) => !unwantedWords.includes(word.toLowerCase()))
+                    .join(' ');
 
                 extractedLocation = extractedLocation.trim();
 
@@ -194,15 +234,17 @@ function extractItemData() {
                 // Remove extra whitespace
                 extractedLocation = extractedLocation.replace(/\s+/g, ' ').trim();
                 // Skip if it's just generic text
-                if (extractedLocation &&
+                if (
+                    extractedLocation &&
                     !extractedLocation.includes('Kleinanzeigen') &&
                     !extractedLocation.includes('eBay') &&
                     !extractedLocation.includes('Anzeige') &&
                     !extractedLocation.includes('Verkauf') &&
                     extractedLocation.length > 2 &&
-                    extractedLocation !== 'Unknown') {
+                    extractedLocation !== 'Unknown'
+                ) {
                     location = extractedLocation;
-    // Keep only essential logs
+                    // Keep only essential logs
                     break;
                 }
             }
@@ -234,9 +276,11 @@ function extractItemData() {
             const match = bodyText.match(pattern);
             if (match && match[1]) {
                 const potentialLocation = match[1].trim();
-                if (potentialLocation.length > 2 &&
+                if (
+                    potentialLocation.length > 2 &&
                     !potentialLocation.includes('Kleinanzeigen') &&
-                    !potentialLocation.includes('eBay')) {
+                    !potentialLocation.includes('eBay')
+                ) {
                     location = potentialLocation;
                     break;
                 }
@@ -260,7 +304,7 @@ function extractItemData() {
         const element = document.querySelector(selector);
         if (element) {
             const priceText = element.textContent.trim();
-    // Keep only essential logs
+            // Keep only essential logs
             if (priceText) {
                 // Handle German price format: "123,45 €" or "2.200 €" or "Preis: 123,45 €"
                 let cleanPrice = priceText.replace(/€/g, '').replace(/EUR/gi, '').trim();
@@ -268,7 +312,7 @@ function extractItemData() {
                 // Remove prefixes like "Preis:", "Price:", etc.
                 cleanPrice = cleanPrice.replace(/^(Preis|Price|Kosten):\s*/i, '');
 
-        // Keep only essential logs
+                // Keep only essential logs
 
                 // Handle German number format:
                 // - Decimal separator: comma (,)
@@ -279,7 +323,7 @@ function extractItemData() {
                 const numberMatch = cleanPrice.match(/(\d+(?:\.\d{3})*(?:,\d{2})?)/);
                 if (numberMatch) {
                     let numberPart = numberMatch[1];
-            // Keep only essential logs
+                    // Keep only essential logs
 
                     // Check if this is a German format with thousands separator
                     // Pattern: digits with dots (thousands) followed by comma and 2 digits (decimal)
@@ -287,7 +331,7 @@ function extractItemData() {
                     if (germanThousandsMatch) {
                         // German format with decimals: "1.234,56" -> "1234.56"
                         numberPart = numberPart.replace(/\./g, '').replace(',', '.');
-                // Keep only essential logs
+                        // Keep only essential logs
                     } else {
                         // Check if this is just thousands without decimals: "2.200"
                         const thousandsOnlyMatch = numberPart.match(/^(\d+(?:\.\d{3})*)$/);
@@ -301,7 +345,7 @@ function extractItemData() {
                     }
 
                     price = parseFloat(numberPart);
-            // Keep only essential logs
+                    // Keep only essential logs
                     break;
                 }
             }
@@ -332,22 +376,34 @@ function extractItemData() {
     // If no images from JSON-LD, fallback to img elements
     if (images.length === 0) {
         // Find the main ad container first (like monitor app finds item element)
-        const adContainer = document.querySelector('#viewad-main') ||
-                            document.querySelector('.ad-view') ||
-                            document.querySelector('.ad-details') ||
-                            document.querySelector('[data-testid="ad-details"]') ||
-                            document.body;
+        const adContainer =
+            document.querySelector('#viewad-main') ||
+            document.querySelector('.ad-view') ||
+            document.querySelector('.ad-details') ||
+            document.querySelector('[data-testid="ad-details"]') ||
+            document.body;
 
         try {
             // Find all img elements within the ad container (like monitor app does)
             const imgElements = adContainer.querySelectorAll('img');
 
-            for (const img of Array.from(imgElements).slice(0, 5)) { // Check more images
+            for (const img of Array.from(imgElements).slice(0, 5)) {
+                // Check more images
                 // Check both src and data-imgsrc (for lazy loading)
-                let src = img.src || img.getAttribute('src') || img.getAttribute('data-imgsrc') || img.getAttribute('data-src');
+                let src =
+                    img.src ||
+                    img.getAttribute('src') ||
+                    img.getAttribute('data-imgsrc') ||
+                    img.getAttribute('data-src');
 
                 // Skip if no src or if it's an icon/logo/placeholder
-                if (!src || !src.startsWith('http') || src.includes('placeholder') || src.includes('icon') || src.includes('logo')) {
+                if (
+                    !src ||
+                    !src.startsWith('http') ||
+                    src.includes('placeholder') ||
+                    src.includes('icon') ||
+                    src.includes('logo')
+                ) {
                     continue;
                 }
 
@@ -376,9 +432,19 @@ function extractItemData() {
                     const galleryImgs = document.querySelectorAll(selector);
 
                     for (const img of Array.from(galleryImgs).slice(0, 5)) {
-                        let src = img.src || img.getAttribute('src') || img.getAttribute('data-imgsrc') || img.getAttribute('data-src');
+                        let src =
+                            img.src ||
+                            img.getAttribute('src') ||
+                            img.getAttribute('data-imgsrc') ||
+                            img.getAttribute('data-src');
 
-                        if (src && src.startsWith('http') && !src.includes('placeholder') && !src.includes('icon') && !src.includes('logo')) {
+                        if (
+                            src &&
+                            src.startsWith('http') &&
+                            !src.includes('placeholder') &&
+                            !src.includes('icon') &&
+                            !src.includes('logo')
+                        ) {
                             images.push(src);
                         }
                     }
@@ -386,7 +452,6 @@ function extractItemData() {
                     if (images.length > 0) break;
                 }
             }
-
         } catch (e) {
             console.warn('Error extracting images:', e);
         }
@@ -486,44 +551,47 @@ function extractProductDetails() {
         const text = detailElement.textContent || '';
 
         // Split by newlines to separate key and value
-        const lines = text.split('\n').map(line => line.trim()).filter(line => line);
+        const lines = text
+            .split('\n')
+            .map((line) => line.trim())
+            .filter((line) => line);
 
         if (lines.length >= 2) {
             const key = lines[0];
             const value = lines.slice(1).join(' ').trim();
 
-    // Keep only essential logs
+            // Keep only essential logs
 
             if (key && value && key.length < 50 && value.length < 100) {
                 // Map German keys to English labels - generic product attributes
                 const keyMapping = {
-                    'Marke': 'Brand',
-                    'Modell': 'Model',
-                    'Größe': 'Size',
-                    'Zustand': 'Condition',
-                    'Farbe': 'Color',
-                    'Material': 'Material',
-                    'Gewicht': 'Weight',
-                    'Art': 'Type',
-                    'Ausstattung': 'Features',
-                    'Leistung': 'Power',
-                    'Kapazität': 'Capacity',
-                    'Anzahl': 'Quantity',
-                    'Packung': 'Package',
-                    'Hersteller': 'Manufacturer',
-                    'Typ': 'Type',
-                    'Maße': 'Dimensions',
-                    'Status': 'Status',
-                    'Materialien': 'Materials',
-                    'Performance': 'Performance',
-                    'Volume': 'Volume',
-                    'Count': 'Count',
-                    'Pieces': 'Pieces',
-                    'Set': 'Set'
+                    Marke: 'Brand',
+                    Modell: 'Model',
+                    Größe: 'Size',
+                    Zustand: 'Condition',
+                    Farbe: 'Color',
+                    Material: 'Material',
+                    Gewicht: 'Weight',
+                    Art: 'Type',
+                    Ausstattung: 'Features',
+                    Leistung: 'Power',
+                    Kapazität: 'Capacity',
+                    Anzahl: 'Quantity',
+                    Packung: 'Package',
+                    Hersteller: 'Manufacturer',
+                    Typ: 'Type',
+                    Maße: 'Dimensions',
+                    Status: 'Status',
+                    Materialien: 'Materials',
+                    Performance: 'Performance',
+                    Volume: 'Volume',
+                    Count: 'Count',
+                    Pieces: 'Pieces',
+                    Set: 'Set'
                 };
 
                 const englishKey = keyMapping[key] || key;
-                if (!details.some(d => d.includes(englishKey))) {
+                if (!details.some((d) => d.includes(englishKey))) {
                     details.push(`${englishKey}: ${value}`);
                 }
             }
@@ -532,9 +600,13 @@ function extractProductDetails() {
 
     // Fallback to other selectors if no structured data found
     if (details.length === 0) {
-    // Keep only essential logs
+        // Keep only essential logs
         for (const selector of specSelectors) {
-            if (selector === '.addetailslist' || selector === '.addetailslist--detail' || selector === '.addetailslist--split') {
+            if (
+                selector === '.addetailslist' ||
+                selector === '.addetailslist--detail' ||
+                selector === '.addetailslist--split'
+            ) {
                 continue; // Already tried these
             }
 
@@ -545,18 +617,33 @@ function extractProductDetails() {
 
                 // Extract common product attributes - generic patterns
                 const attributes = [
-                    { pattern: /(?:Marke|Brand|Hersteller|Manufacturer):\s*([^\n\r,]+)/i, label: 'Brand' },
+                    {
+                        pattern: /(?:Marke|Brand|Hersteller|Manufacturer):\s*([^\n\r,]+)/i,
+                        label: 'Brand'
+                    },
                     { pattern: /(?:Modell|Model|Typ|Type):\s*([^\n\r,]+)/i, label: 'Model' },
                     { pattern: /(?:Größe|Size|Maße|Dimensions):\s*([^\n\r,]+)/i, label: 'Size' },
                     { pattern: /(?:Zustand|Condition|Status):\s*([^\n\r,]+)/i, label: 'Condition' },
                     { pattern: /(?:Farbe|Color|Colour):\s*([^\n\r,]+)/i, label: 'Color' },
-                    { pattern: /(?:Material|Materialien|Materials):\s*([^\n\r,]+)/i, label: 'Material' },
+                    {
+                        pattern: /(?:Material|Materialien|Materials):\s*([^\n\r,]+)/i,
+                        label: 'Material'
+                    },
                     { pattern: /(?:Gewicht|Weight):\s*([^\n\r,]+)/i, label: 'Weight' },
                     { pattern: /(?:Art|Type|Category|Kategorie):\s*([^\n\r,]+)/i, label: 'Type' },
-                    { pattern: /(?:Ausstattung|Features|Extras|Equipment):\s*([^\n\r]+)/i, label: 'Features' },
-                    { pattern: /(?:Leistung|Power|Performance|Output):\s*([^\n\r,]+)/i, label: 'Power' },
+                    {
+                        pattern: /(?:Ausstattung|Features|Extras|Equipment):\s*([^\n\r]+)/i,
+                        label: 'Features'
+                    },
+                    {
+                        pattern: /(?:Leistung|Power|Performance|Output):\s*([^\n\r,]+)/i,
+                        label: 'Power'
+                    },
                     { pattern: /(?:Kapazität|Capacity|Volume):\s*([^\n\r,]+)/i, label: 'Capacity' },
-                    { pattern: /(?:Anzahl|Quantity|Count|Pieces):\s*([^\n\r,]+)/i, label: 'Quantity' },
+                    {
+                        pattern: /(?:Anzahl|Quantity|Count|Pieces):\s*([^\n\r,]+)/i,
+                        label: 'Quantity'
+                    },
                     { pattern: /(?:Packung|Package|Set):\s*([^\n\r,]+)/i, label: 'Package' }
                 ];
 
@@ -564,7 +651,7 @@ function extractProductDetails() {
                     const match = text.match(attr.pattern);
                     if (match && match[1]) {
                         const value = match[1].trim();
-                        if (value && !details.some(d => d.includes(attr.label))) {
+                        if (value && !details.some((d) => d.includes(attr.label))) {
                             details.push(`${attr.label}: ${value}`);
                         }
                     }
@@ -609,16 +696,28 @@ function extractProductDetails() {
 
         // Look for product specification patterns in the entire page
         const pageAttributes = [
-            { pattern: /(?:Marke|Brand|Hersteller|Manufacturer)[:\s]*([^\n\r,.;]+)/gi, label: 'Brand' },
+            {
+                pattern: /(?:Marke|Brand|Hersteller|Manufacturer)[:\s]*([^\n\r,.;]+)/gi,
+                label: 'Brand'
+            },
             { pattern: /(?:Modell|Model|Typ|Type)[:\s]*([^\n\r,.;]+)/gi, label: 'Model' },
             { pattern: /(?:Größe|Size|Maße|Dimensions)[:\s]*([^\n\r,.;]+)/gi, label: 'Size' },
             { pattern: /(?:Zustand|Condition|Status)[:\s]*([^\n\r,.;]+)/gi, label: 'Condition' },
             { pattern: /(?:Farbe|Color|Colour)[:\s]*([^\n\r,.;]+)/gi, label: 'Color' },
-            { pattern: /(?:Material|Materialien|Materials)[:\s]*([^\n\r,.;]+)/gi, label: 'Material' },
+            {
+                pattern: /(?:Material|Materialien|Materials)[:\s]*([^\n\r,.;]+)/gi,
+                label: 'Material'
+            },
             { pattern: /(?:Gewicht|Weight)[:\s]*([^\n\r,.;]+)/gi, label: 'Weight' },
             { pattern: /(?:Art|Type|Category|Kategorie)[:\s]*([^\n\r,.;]+)/gi, label: 'Type' },
-            { pattern: /(?:Ausstattung|Features|Extras|Equipment)[:\s]*([^\n\r,.;]+)/gi, label: 'Features' },
-            { pattern: /(?:Leistung|Power|Performance|Output)[:\s]*([^\n\r,.;]+)/gi, label: 'Power' },
+            {
+                pattern: /(?:Ausstattung|Features|Extras|Equipment)[:\s]*([^\n\r,.;]+)/gi,
+                label: 'Features'
+            },
+            {
+                pattern: /(?:Leistung|Power|Performance|Output)[:\s]*([^\n\r,.;]+)/gi,
+                label: 'Power'
+            },
             { pattern: /(?:Kapazität|Capacity|Volume)[:\s]*([^\n\r,.;]+)/gi, label: 'Capacity' },
             { pattern: /(?:Anzahl|Quantity|Count|Pieces)[:\s]*([^\n\r,.;]+)/gi, label: 'Quantity' },
             { pattern: /(?:Packung|Package|Set)[:\s]*([^\n\r,.;]+)/gi, label: 'Package' }
@@ -629,7 +728,12 @@ function extractProductDetails() {
             for (const match of matches) {
                 if (match && match[1]) {
                     const value = match[1].trim();
-                    if (value && value.length > 0 && value.length < 50 && !details.some(d => d.includes(attr.label))) {
+                    if (
+                        value &&
+                        value.length > 0 &&
+                        value.length < 50 &&
+                        !details.some((d) => d.includes(attr.label))
+                    ) {
                         details.push(`${attr.label}: ${value}`);
                     }
                 }

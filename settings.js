@@ -44,7 +44,7 @@ function createInitialState() {
 function renderProviderCards(elements, state) {
     const container = elements.providerGrid;
     container.innerHTML = '';
-    PROVIDERS.forEach(provider => {
+    PROVIDERS.forEach((provider) => {
         const card = document.createElement('button');
         card.type = 'button';
         card.className = 'provider-card';
@@ -120,9 +120,8 @@ function loadSettings(elements, state) {
         state.maxImages = result.maxImages || state.maxImages;
         state.enableImages = result.enableImages !== false;
         state.autoAnalyze = result.autoAnalyze !== false;
-        state.temperature = typeof result.temperature === 'number'
-            ? result.temperature
-            : state.temperature;
+        state.temperature =
+            typeof result.temperature === 'number' ? result.temperature : state.temperature;
         state.randomSeed = Number.isInteger(result.randomSeed)
             ? result.randomSeed
             : state.randomSeed;
@@ -143,7 +142,7 @@ function hydrateForm(elements, state) {
 }
 
 function updateActiveProviderCard(state) {
-    document.querySelectorAll('.provider-card').forEach(card => {
+    document.querySelectorAll('.provider-card').forEach((card) => {
         card.classList.toggle('active', card.dataset.provider === state.selectedProvider);
     });
 }
@@ -164,10 +163,13 @@ function updateApiKeyUI(elements, state) {
 
 function populateModelSelect(elements, state) {
     const provider = getProviderMeta(state.selectedProvider);
-    const models = (state.providerModels[state.selectedProvider] && state.providerModels[state.selectedProvider].length
-        ? state.providerModels[state.selectedProvider]
-        : provider.suggestedModels) || [];
-    const currentSelection = state.providerModelSelections[state.selectedProvider] || provider.defaultModel;
+    const models =
+        (state.providerModels[state.selectedProvider] &&
+        state.providerModels[state.selectedProvider].length
+            ? state.providerModels[state.selectedProvider]
+            : provider.suggestedModels) || [];
+    const currentSelection =
+        state.providerModelSelections[state.selectedProvider] || provider.defaultModel;
 
     elements.modelSelect.innerHTML = '';
 
@@ -178,11 +180,11 @@ function populateModelSelect(elements, state) {
         appendOption(elements.modelSelect, recommendedModel, seen, { recommended: true });
     }
 
-    models.forEach(model => {
+    models.forEach((model) => {
         appendOption(elements.modelSelect, model, seen);
     });
 
-    const optionValues = Array.from(elements.modelSelect.options).map(option => option.value);
+    const optionValues = Array.from(elements.modelSelect.options).map((option) => option.value);
     if (optionValues.includes(currentSelection)) {
         elements.modelSelect.value = currentSelection;
     } else if (optionValues.includes(provider.defaultModel)) {
@@ -215,7 +217,11 @@ async function refreshModels(state, elements, silent) {
         });
         populateModelSelect(elements, state);
         if (!silent) {
-            showStatus(elements.status, `Loaded ${models.length} models from ${provider.shortName}`, 'success');
+            showStatus(
+                elements.status,
+                `Loaded ${models.length} models from ${provider.shortName}`,
+                'success'
+            );
         }
         return models;
     } catch (error) {
@@ -249,7 +255,11 @@ async function testApiKey(state, elements) {
         }, 3000);
         return true;
     } catch (error) {
-        showStatus(elements.status, error.message || `Failed to validate ${provider.shortName} key.`, 'error');
+        showStatus(
+            elements.status,
+            error.message || `Failed to validate ${provider.shortName} key.`,
+            'error'
+        );
         return false;
     }
 }
@@ -278,7 +288,11 @@ function buildPayload(state, elements) {
     const provider = getProviderMeta(state.selectedProvider);
     const apiKey = (state.providerApiKeys[state.selectedProvider] || '').trim();
     if (!apiKey) {
-        showStatus(elements.status, `Add your ${provider.shortName} API key before saving.`, 'error');
+        showStatus(
+            elements.status,
+            `Add your ${provider.shortName} API key before saving.`,
+            'error'
+        );
         return null;
     }
 
@@ -347,9 +361,7 @@ function appendOption(selectEl, model, seen, { recommended = false } = {}) {
 
     const option = document.createElement('option');
     option.value = model.id;
-    option.textContent = recommended
-        ? `★ Recommended • ${model.label}`
-        : model.label;
+    option.textContent = recommended ? `★ Recommended • ${model.label}` : model.label;
 
     if (recommended) {
         option.dataset.recommended = 'true';
@@ -365,7 +377,7 @@ function getRecommendedModelOption(provider, models) {
     }
 
     const combined = [...models, ...(provider.suggestedModels || [])];
-    const match = combined.find(model => model.id === provider.defaultModel);
+    const match = combined.find((model) => model.id === provider.defaultModel);
 
     if (!match) {
         return {
@@ -384,6 +396,6 @@ function formatModelLabel(id) {
     return id
         .replace(/-/g, ' ')
         .replace(/\s+/g, ' ')
-        .replace(/\b\w/g, char => char.toUpperCase())
+        .replace(/\b\w/g, (char) => char.toUpperCase())
         .trim();
 }

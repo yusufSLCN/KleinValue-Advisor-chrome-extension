@@ -28,31 +28,35 @@ class DashboardManager {
 
     updateStats() {
         // Filter out items with analysis errors
-        const validItems = this.items.filter(item => !item.estimation?.error);
+        const validItems = this.items.filter((item) => !item.estimation?.error);
 
         // Price ranges (only from valid analyses)
         const priceRanges = this.computeDynamicPriceRanges(validItems);
-        const maxCount = Math.max(...priceRanges.map(range => range.count), 1);
+        const maxCount = Math.max(...priceRanges.map((range) => range.count), 1);
         const priceRangesHtml = `
             <div class="bar-chart">
-                ${priceRanges.map(({ label, count }) => {
-                    const height = maxCount > 0 ? (count / maxCount) * 100 : 0;
-                    return `<div class="bar-container">
+                ${priceRanges
+                    .map(({ label, count }) => {
+                        const height = maxCount > 0 ? (count / maxCount) * 100 : 0;
+                        return `<div class="bar-container">
                         <div class="bar" style="height: ${height}%">
                             <span class="bar-value">${count}</span>
                         </div>
                         <span class="bar-label">${label}</span>
                     </div>`;
-                }).join('')}
+                    })
+                    .join('')}
             </div>
         `;
 
         // Good value opportunities (only from valid analyses)
-        const goodValueCount = validItems.filter(item => this.isGoodValue(item)).length;
+        const goodValueCount = validItems.filter((item) => this.isGoodValue(item)).length;
 
         // Recent items (last 24h) - count all items, not just valid ones
         const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-        const recentItems = this.items.filter(item => new Date(item.analyzedAt || 0) > oneDayAgo).length;
+        const recentItems = this.items.filter(
+            (item) => new Date(item.analyzedAt || 0) > oneDayAgo
+        ).length;
 
         const priceRangesEl = document.getElementById('price-ranges');
         const goodValueEl = document.getElementById('good-value-count');
@@ -63,12 +67,12 @@ class DashboardManager {
         if (recentEl) recentEl.textContent = recentItems;
     }
 
-
     updateItemsCount() {
         const count = this.filteredItems.length;
         const total = this.items.length;
-        document.getElementById('items-count').textContent =
-            this.searchQuery ? `${count} of ${total} items` : `${total} items`;
+        document.getElementById('items-count').textContent = this.searchQuery
+            ? `${count} of ${total} items`
+            : `${total} items`;
     }
 
     filterItems() {
@@ -77,16 +81,17 @@ class DashboardManager {
         // Apply search filter
         if (this.searchQuery.trim()) {
             const query = this.searchQuery.toLowerCase();
-            filtered = filtered.filter(item =>
-                item.title.toLowerCase().includes(query) ||
-                item.location?.toLowerCase().includes(query) ||
-                item.estimation?.reasoning?.toLowerCase().includes(query)
+            filtered = filtered.filter(
+                (item) =>
+                    item.title.toLowerCase().includes(query) ||
+                    item.location?.toLowerCase().includes(query) ||
+                    item.estimation?.reasoning?.toLowerCase().includes(query)
             );
         }
 
         // Apply good value filter
         if (this.goodValueFilter) {
-            filtered = filtered.filter(item => this.isGoodValue(item));
+            filtered = filtered.filter((item) => this.isGoodValue(item));
         }
 
         this.filteredItems = filtered;
@@ -132,11 +137,11 @@ class DashboardManager {
         }
 
         // Sort by analysis date (newest first)
-        const sortedItems = [...this.filteredItems].sort((a, b) =>
-            new Date(b.analyzedAt || 0) - new Date(a.analyzedAt || 0)
+        const sortedItems = [...this.filteredItems].sort(
+            (a, b) => new Date(b.analyzedAt || 0) - new Date(a.analyzedAt || 0)
         );
 
-        sortedItems.forEach(item => {
+        sortedItems.forEach((item) => {
             const itemElement = this.createItemElement(item);
             container.appendChild(itemElement);
         });
@@ -146,11 +151,14 @@ class DashboardManager {
         const div = document.createElement('div');
         div.className = 'item-card';
 
-        const imageHtml = item.images && item.images.length > 0
-            ? `<img src="${item.images[0]}" alt="${item.title}" class="item-image" onerror="this.style.display='none'">`
-            : '<div class="item-image" style="display: flex; align-items: center; justify-content: center; color: #6c757d; font-size: 1.2em;">📷</div>';
+        const imageHtml =
+            item.images && item.images.length > 0
+                ? `<img src="${item.images[0]}" alt="${item.title}" class="item-image" onerror="this.style.display='none'">`
+                : '<div class="item-image" style="display: flex; align-items: center; justify-content: center; color: #6c757d; font-size: 1.2em;">📷</div>';
 
-        const reasoningText = item.estimation?.reasoning ? this.escapeHtml(item.estimation.reasoning) : 'No reasoning available';
+        const reasoningText = item.estimation?.reasoning
+            ? this.escapeHtml(item.estimation.reasoning)
+            : 'No reasoning available';
 
         div.innerHTML = `
             ${imageHtml}
@@ -171,9 +179,10 @@ class DashboardManager {
                         💰 Listed: €${item.price || 'N/A'}
                     </div>
                     <div class="estimation">
-                        ${item.estimation?.error ?
-                            `❌ Analysis Failed: ${item.estimation.errorMessage || 'Unknown error'}` :
-                            `🤖 AI Estimate: €${item.estimation?.value || 0}`
+                        ${
+                            item.estimation?.error
+                                ? `❌ Analysis Failed: ${item.estimation.errorMessage || 'Unknown error'}`
+                                : `🤖 AI Estimate: €${item.estimation?.value || 0}`
                         }
                         ${item.estimation?.reasoning && !item.estimation.error ? '<span class="reasoning-icon" title="Hover for AI reasoning">ℹ️</span>' : ''}
                         ${item.estimation?.model && !item.estimation.error ? `<small class="model-info">via ${item.estimation.model.replace('gemini-', '').replace('-latest', '')}</small>` : ''}
@@ -209,8 +218,10 @@ class DashboardManager {
                 // Position tooltip above the AI estimate to avoid clipping
                 const estimateRect = reasoningIcon.parentElement.getBoundingClientRect();
                 const cardRect = div.getBoundingClientRect();
-                tooltip.style.left = (estimateRect.left - cardRect.left + estimateRect.width / 2) + 'px';
-                tooltip.style.top = (estimateRect.top - cardRect.top - tooltip.offsetHeight - 8) + 'px';
+                tooltip.style.left =
+                    estimateRect.left - cardRect.left + estimateRect.width / 2 + 'px';
+                tooltip.style.top =
+                    estimateRect.top - cardRect.top - tooltip.offsetHeight - 8 + 'px';
                 tooltip.style.transform = 'translateX(-50%)';
                 tooltip.style.zIndex = '10000';
             });
@@ -249,8 +260,11 @@ class DashboardManager {
     formatDate(dateString) {
         if (!dateString) return 'Unknown';
         return new Date(dateString).toLocaleDateString('en-DE', {
-            year: 'numeric', month: 'short', day: 'numeric',
-            hour: '2-digit', minute: '2-digit'
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
         });
     }
 
@@ -292,8 +306,8 @@ class DashboardManager {
     async removeItem(identifier) {
         if (confirm('Are you sure you want to remove this item?')) {
             // Find item by ID or URL
-            const itemIndex = this.items.findIndex(item =>
-                item.id === identifier || item.url === identifier
+            const itemIndex = this.items.findIndex(
+                (item) => item.id === identifier || item.url === identifier
             );
 
             if (itemIndex >= 0) {
@@ -313,8 +327,8 @@ class DashboardManager {
 
     computeDynamicPriceRanges(validItems) {
         const priceValues = validItems
-            .map(item => this.normalizePriceValue(item.price))
-            .filter(value => Number.isFinite(value) && value >= 0);
+            .map((item) => this.normalizePriceValue(item.price))
+            .filter((value) => Number.isFinite(value) && value >= 0);
 
         if (priceValues.length === 0) {
             return [
@@ -340,7 +354,7 @@ class DashboardManager {
         }
 
         const counts = new Array(bucketCount).fill(0);
-        priceValues.forEach(price => {
+        priceValues.forEach((price) => {
             for (let i = 0; i < bucketCount; i++) {
                 const upper = boundaries[i + 1];
                 if (i === bucketCount - 1 || price < upper || upper === boundaries[i]) {
@@ -351,7 +365,11 @@ class DashboardManager {
         });
 
         return counts.map((count, index) => ({
-            label: this.buildRangeLabel(boundaries[index], boundaries[index + 1], index === bucketCount - 1),
+            label: this.buildRangeLabel(
+                boundaries[index],
+                boundaries[index + 1],
+                index === bucketCount - 1
+            ),
             count
         }));
     }

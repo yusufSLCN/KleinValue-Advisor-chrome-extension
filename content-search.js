@@ -6,7 +6,7 @@
 // Check if we're on an item detail page and exit if so
 if (!window.location.pathname.includes('/s-anzeige/')) {
     // Wait for page to load
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         addPriceIndicators();
     });
 
@@ -16,8 +16,8 @@ if (!window.location.pathname.includes('/s-anzeige/')) {
     }
 
     // Also observe for dynamic content loading
-    const observer = new MutationObserver(function(mutations) {
-        mutations.forEach(function(mutation) {
+    const observer = new MutationObserver(function (mutations) {
+        mutations.forEach(function (mutation) {
             if (mutation.type === 'childList') {
                 addPriceIndicators();
             }
@@ -37,16 +37,18 @@ async function addPriceIndicators() {
             console.error('StorageManager not available');
             return;
         }
-        
+
         const analyzedItems = await window.StorageManager.getItems();
-        
+
         if (!analyzedItems || analyzedItems.length === 0) {
             return;
         }
 
-        const searchItems = document.querySelectorAll('article.aditem, li.ad-listitem, [data-adid]');
-        
-        searchItems.forEach(itemElement => {
+        const searchItems = document.querySelectorAll(
+            'article.aditem, li.ad-listitem, [data-adid]'
+        );
+
+        searchItems.forEach((itemElement) => {
             if (itemElement.querySelector('.ai-price-indicator')) {
                 return;
             }
@@ -57,8 +59,8 @@ async function addPriceIndicators() {
             }
 
             const itemUrl = linkElement.href;
-            const analyzedItem = analyzedItems.find(item => item.url === itemUrl);
-            
+            const analyzedItem = analyzedItems.find((item) => item.url === itemUrl);
+
             if (analyzedItem && analyzedItem.estimation && !analyzedItem.estimation.error) {
                 injectPriceIndicator(itemElement, analyzedItem);
             }
@@ -69,8 +71,10 @@ async function addPriceIndicators() {
 }
 
 function injectPriceIndicator(itemElement, analyzedItem) {
-    const priceElement = itemElement.querySelector('.aditem-main--middle--price-shipping--price, .price, [class*="price"]');
-    
+    const priceElement = itemElement.querySelector(
+        '.aditem-main--middle--price-shipping--price, .price, [class*="price"]'
+    );
+
     if (!priceElement) {
         return;
     }
@@ -78,7 +82,7 @@ function injectPriceIndicator(itemElement, analyzedItem) {
     const estimation = analyzedItem.estimation;
     const aiPrice = estimation.value;
     const confidence = estimation.confidence || 70;
-    
+
     // Extract listed price from the item
     let listedPrice = 0;
     if (analyzedItem.price && typeof analyzedItem.price === 'string') {
@@ -86,13 +90,16 @@ function injectPriceIndicator(itemElement, analyzedItem) {
     } else if (typeof analyzedItem.price === 'number') {
         listedPrice = analyzedItem.price;
     }
-    
-    const storedGoodValue = typeof analyzedItem.isGoodValue === 'boolean' ? analyzedItem.isGoodValue : undefined;
-    const computedGoodValue = listedPrice > 0 && typeof aiPrice === 'number' && aiPrice > listedPrice;
+
+    const storedGoodValue =
+        typeof analyzedItem.isGoodValue === 'boolean' ? analyzedItem.isGoodValue : undefined;
+    const computedGoodValue =
+        listedPrice > 0 && typeof aiPrice === 'number' && aiPrice > listedPrice;
     const isGoodValue = storedGoodValue !== undefined ? storedGoodValue : computedGoodValue;
     const label = isGoodValue ? 'Good Value' : 'AI Estimate';
-    
-    const displayEstimate = typeof aiPrice === 'number' && Number.isFinite(aiPrice) ? aiPrice : null;
+
+    const displayEstimate =
+        typeof aiPrice === 'number' && Number.isFinite(aiPrice) ? aiPrice : null;
     const summarizedEstimate = displayEstimate !== null ? displayEstimate.toFixed(0) : 'N/A';
     const detailedEstimate = displayEstimate !== null ? displayEstimate.toFixed(2) : 'N/A';
 

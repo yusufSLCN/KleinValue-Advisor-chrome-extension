@@ -2,7 +2,7 @@
 
 AI-powered Chrome extension for analyzing Kleinanzeigen listings with Google Gemini, OpenAI GPT-4o/4.1, and Anthropic Claude. The extension injects a valuation UI directly into listings, augments search results, and ships with a modern dashboard plus settings surface for multi-provider management.
 
-> **Status:** Actively iterated. Automated tests are scheduled for a future milestone, but the build/lint toolchain is already in place.
+> **Status:** Actively iterated. Automated tests are scheduled for a future milestone; build tooling is ready today.
 
 ## Table of Contents
 
@@ -23,17 +23,17 @@ AI-powered Chrome extension for analyzing Kleinanzeigen listings with Google Gem
 - **Vision-first valuations:** Pulls listing images, runs multimodal prompts, and surfaces structured price, confidence, and reasoning.
 - **Search & dashboard integration:** Shows cached AI estimates inline on Kleinanzeigen search results and in an analytics dashboard with filters and stats.
 - **Cost & transparency:** Displays provider costs, token usage, and confidence for every run so users know when to trust or renegotiate.
-- **Modern toolchain:** Webpack + Babel bundling, ESLint/Prettier, and environment-ready configuration to keep the codebase healthy as it grows.
+- **Modern toolchain:** Webpack + Babel bundling, Prettier formatting, and environment-ready configuration to keep the codebase healthy as it grows.
 
 ## Screens & Modules
 
-| Surface | Description |
-| --- | --- |
-| **Listing injection** | Adds an "🤖 Analyze with AI" entry point, displays the latest valuation, and shows cost & reasoning on demand. |
-| **Search assist** | Annotates Kleinanzeigen search results for items already analyzed (with bargain highlighting). |
-| **Dashboard** | Grid of analyzed items with search, statistics toggle, and per-item removal. |
-| **Settings** | Gradient-rich provider studio with API key entry, live model refresh, analysis controls, and automation toggles. |
-| **Popup** | Quick glance list of recent valuations plus shortcuts to dashboard/settings. |
+| Surface               | Description                                                                                                      |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| **Listing injection** | Adds an "🤖 Analyze with AI" entry point, displays the latest valuation, and shows cost & reasoning on demand.   |
+| **Search assist**     | Annotates Kleinanzeigen search results for items already analyzed (with bargain highlighting).                   |
+| **Dashboard**         | Grid of analyzed items with search, statistics toggle, and per-item removal.                                     |
+| **Settings**          | Gradient-rich provider studio with API key entry, live model refresh, analysis controls, and automation toggles. |
+| **Popup**             | Quick glance list of recent valuations plus shortcuts to dashboard/settings.                                     |
 
 ## Getting Started
 
@@ -52,13 +52,12 @@ All provider keys are entered and stored inside the extension settings UI. There
 
 ## Available Scripts
 
-| Command | Description |
-| --- | --- |
-| `npm run dev` | Development build with watch mode. |
-| `npm run build` | Production bundle used for packaging the extension. |
-| `npm run lint` | ESLint across the repo (browser + WebExtension aware). |
-| `npm run format` | Prettier auto-format for JS/HTML/CSS/JSON/Markdown. |
-| `npm run format:check` | Prettier in read-only mode for CI. |
+| Command                | Description                                         |
+| ---------------------- | --------------------------------------------------- |
+| `npm run dev`          | Development build with watch mode.                  |
+| `npm run build`        | Production bundle used for packaging the extension. |
+| `npm run format`       | Prettier auto-format for JS/HTML/CSS/JSON/Markdown. |
+| `npm run format:check` | Prettier in read-only mode for CI.                  |
 
 Automated tests will arrive in a future release (`npm test` is intentionally omitted for now).
 
@@ -118,7 +117,7 @@ Automated tests will arrive in a future release (`npm test` is intentionally omi
 ## Roadmap
 
 - [ ] Automated unit tests for estimator core & storage manager.
-- [ ] Continuous integration (GitHub Actions) running `lint` and `build`.
+- [ ] Continuous integration (GitHub Actions) running `format:check` and `build`.
 - [ ] Optional env-driven secrets for CI packaging.
 - [ ] Polish on popup/dashboard animations.
 
@@ -127,7 +126,7 @@ Automated tests will arrive in a future release (`npm test` is intentionally omi
 See [CONTRIBUTING.md](CONTRIBUTING.md) for local setup, coding standards, and commit guidelines. In short:
 
 1. Fork & branch (`feat/<short-description>`).
-2. Run `npm run lint` and `npm run format:check` before pushing.
+2. Run `npm run format:check` (and optionally `npm run build`) before pushing.
 3. Submit a PR with screenshots/GIFs for UI changes.
 
 ## License

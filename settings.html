@@ -1,92 +1,119 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KleinValue Advisor · Settings</title>
-    <link rel="stylesheet" href="settings.css">
-</head>
-<body>
-    <div class="settings-shell">
-        <header class="hero">
-            <h1>KleinValue Advisor</h1>
-            <p>Wire up your favorite AI providers, refresh live model catalogs, and fine-tune the valuation engine without leaving this page.</p>
-        </header>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>KleinValue Advisor · Settings</title>
+        <link rel="stylesheet" href="settings.css" />
+    </head>
+    <body>
+        <div class="settings-shell">
+            <header class="hero">
+                <h1>KleinValue Advisor</h1>
+                <p>
+                    Wire up your favorite AI providers, refresh live model catalogs, and fine-tune
+                    the valuation engine without leaving this page.
+                </p>
+            </header>
 
-        <section class="panel">
-            <h3>Providers</h3>
-            <div id="provider-grid" class="provider-grid"></div>
-        </section>
+            <section class="panel">
+                <h3>Providers</h3>
+                <div id="provider-grid" class="provider-grid"></div>
+            </section>
 
-        <section class="panel">
-            <div class="field-group">
-                <div class="field">
-                    <label for="api-key">API Key</label>
-                    <div class="inline-actions">
-                        <input type="password" id="api-key" placeholder="Paste the API key for the selected provider">
-                        <button id="test" class="btn ghost">Test Key</button>
+            <section class="panel">
+                <div class="field-group">
+                    <div class="field">
+                        <label for="api-key">API Key</label>
+                        <div class="inline-actions">
+                            <input
+                                type="password"
+                                id="api-key"
+                                placeholder="Paste the API key for the selected provider"
+                            />
+                            <button id="test" class="btn ghost">Test Key</button>
+                        </div>
+                        <p id="api-helper" class="helper"></p>
                     </div>
-                    <p id="api-helper" class="helper"></p>
-                </div>
 
-                <div class="field">
-                    <label for="model-select">Model</label>
-                    <div class="inline-actions">
-                        <select id="model-select"></select>
-                        <button id="refresh-models" class="btn ghost">Refresh Models</button>
+                    <div class="field">
+                        <label for="model-select">Model</label>
+                        <div class="inline-actions">
+                            <select id="model-select"></select>
+                            <button id="refresh-models" class="btn ghost">Refresh Models</button>
+                        </div>
+                        <p class="helper">
+                            We pull the most recent model list directly from the provider. Save to
+                            apply.
+                        </p>
                     </div>
-                    <p class="helper">We pull the most recent model list directly from the provider. Save to apply.</p>
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <section class="panel">
-            <h3>Analysis Controls</h3>
-            <div class="field-group">
-                <div class="field">
-                    <label for="max-images">Max Images</label>
-                    <input type="number" id="max-images" min="1" max="10" step="1" placeholder="4">
+            <section class="panel">
+                <h3>Analysis Controls</h3>
+                <div class="field-group">
+                    <div class="field">
+                        <label for="max-images">Max Images</label>
+                        <input
+                            type="number"
+                            id="max-images"
+                            min="1"
+                            max="10"
+                            step="1"
+                            placeholder="4"
+                        />
+                    </div>
+                    <div class="field">
+                        <label for="temperature">Temperature</label>
+                        <input
+                            type="number"
+                            id="temperature"
+                            min="0"
+                            max="2"
+                            step="0.1"
+                            placeholder="0.2"
+                        />
+                    </div>
                 </div>
-                <div class="field">
-                    <label for="temperature">Temperature</label>
-                    <input type="number" id="temperature" min="0" max="2" step="0.1" placeholder="0.2">
-                </div>
-            </div>
-        </section>
+            </section>
 
-        <section class="panel">
-            <h3>Automations</h3>
-            <div class="toggle-row">
-                <div>
-                    <strong>Image Analysis</strong>
-                    <span>Include gallery visuals in prompts (Gemini supports inline vision).</span>
+            <section class="panel">
+                <h3>Automations</h3>
+                <div class="toggle-row">
+                    <div>
+                        <strong>Image Analysis</strong>
+                        <span
+                            >Include gallery visuals in prompts (Gemini supports inline
+                            vision).</span
+                        >
+                    </div>
+                    <label class="toggle">
+                        <input type="checkbox" id="enable-images" />
+                        <span class="slider"></span>
+                    </label>
                 </div>
-                <label class="toggle">
-                    <input type="checkbox" id="enable-images">
-                    <span class="slider"></span>
-                </label>
-            </div>
-            <div class="toggle-row">
-                <div>
-                    <strong>Auto-analyze Listings</strong>
-                    <span>Immediately run the estimator when a Kleinanzeigen page loads.</span>
+                <div class="toggle-row">
+                    <div>
+                        <strong>Auto-analyze Listings</strong>
+                        <span>Immediately run the estimator when a Kleinanzeigen page loads.</span>
+                    </div>
+                    <label class="toggle">
+                        <input type="checkbox" id="auto-analyze" />
+                        <span class="slider"></span>
+                    </label>
                 </div>
-                <label class="toggle">
-                    <input type="checkbox" id="auto-analyze">
-                    <span class="slider"></span>
-                </label>
-            </div>
-        </section>
+            </section>
 
-        <div class="panel">
-            <div class="actions">
-                <button id="save" class="btn primary">Save Settings</button>
+            <div class="panel">
+                <div class="actions">
+                    <button id="save" class="btn primary">Save Settings</button>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div id="status" class="status-card" hidden></div>
+        <div id="status" class="status-card" hidden></div>
 
-    <script src="dist/settings.js"></script>
-</body>
+        <script src="dist/settings.js"></script>
+    </body>
 </html>

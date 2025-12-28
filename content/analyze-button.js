@@ -22,7 +22,10 @@ function createInjectAIAnalysisButton({
             return;
         }
 
-        const titleElement = document.querySelector('h1.adtitle') || document.querySelector('.ad-titles h1') || document.querySelector('h1');
+        const titleElement =
+            document.querySelector('h1.adtitle') ||
+            document.querySelector('.ad-titles h1') ||
+            document.querySelector('h1');
         if (!titleElement) {
             return;
         }
@@ -33,29 +36,32 @@ function createInjectAIAnalysisButton({
         button.innerHTML = '&#129302; Analyze with AI';
 
         const pageUrl = window.location.href;
-        storageManager.getItems().then(items => {
-            const existingItem = items.find(item => item.url === pageUrl);
+        storageManager
+            .getItems()
+            .then((items) => {
+                const existingItem = items.find((item) => item.url === pageUrl);
 
-            if (existingItem && existingItem.estimation && !existingItem.estimation.error) {
-                button.innerHTML = '&#128257; Re-analyze';
-                button.classList.add('ai-analyze-button--repeat');
-                button.title = 'This item has already been analyzed. Click to re-analyze.';
-                showExistingEstimation(existingItem.estimation);
-            }
-        }).catch(error => {
-            if (error.message.includes('Extension context invalidated')) {
-                console.log('Extension reloaded, using default button state');
-            } else {
-                console.error('Error checking button state:', error);
-            }
-        });
+                if (existingItem && existingItem.estimation && !existingItem.estimation.error) {
+                    button.innerHTML = '&#128257; Re-analyze';
+                    button.classList.add('ai-analyze-button--repeat');
+                    button.title = 'This item has already been analyzed. Click to re-analyze.';
+                    showExistingEstimation(existingItem.estimation);
+                }
+            })
+            .catch((error) => {
+                if (error.message.includes('Extension context invalidated')) {
+                    console.log('Extension reloaded, using default button state');
+                } else {
+                    console.error('Error checking button state:', error);
+                }
+            });
 
         titleElement.parentNode.insertBefore(button, titleElement.nextSibling);
 
         const itemData = extractItemData();
         button.itemData = itemData;
 
-        button.addEventListener('click', async function() {
+        button.addEventListener('click', async function () {
             if (!this.itemData) {
                 console.error('❌ Item data not available');
                 return;
@@ -77,9 +83,12 @@ function createInjectAIAnalysisButton({
 
             try {
                 const estimation = await analyzer.estimateValue(this.itemData);
-                const listingPrice = typeof this.itemData.price === 'number' ? this.itemData.price : 0;
-                const estimatedValue = typeof estimation?.value === 'number' ? estimation.value : null;
-                const isGoodValue = listingPrice > 0 && estimatedValue !== null && estimatedValue > listingPrice;
+                const listingPrice =
+                    typeof this.itemData.price === 'number' ? this.itemData.price : 0;
+                const estimatedValue =
+                    typeof estimation?.value === 'number' ? estimation.value : null;
+                const isGoodValue =
+                    listingPrice > 0 && estimatedValue !== null && estimatedValue > listingPrice;
                 estimation.isGoodValue = isGoodValue;
 
                 this.itemData.estimation = estimation;
@@ -153,7 +162,10 @@ function handleAnalyzerInitError(error) {
         return;
     }
 
-    if (error.code === 'extension-invalidated' || error.message?.includes('Extension context invalidated')) {
+    if (
+        error.code === 'extension-invalidated' ||
+        error.message?.includes('Extension context invalidated')
+    ) {
         alert('The extension was reloaded. Please click Analyze again.');
         return;
     }

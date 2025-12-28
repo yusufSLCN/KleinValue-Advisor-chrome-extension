@@ -1,62 +1,56 @@
 {
-  "manifest_version": 3,
-  "name": "KleinValue Advisor",
-  "version": "1.0",
-  "description": "KleinValue Advisor delivers AI-powered item analysis for Kleinanzeigen",
+    "manifest_version": 3,
+    "name": "KleinValue Advisor",
+    "version": "1.0",
+    "description": "KleinValue Advisor delivers AI-powered item analysis for Kleinanzeigen",
 
-  "icons": {
-    "16": "app_icon.png",
-    "48": "app_icon.png",
-    "128": "app_icon.png"
-  },
-
-  "permissions": [
-    "storage",
-    "activeTab"
-  ],
-
-  "host_permissions": [
-    "https://www.kleinanzeigen.de/*",
-    "https://generativelanguage.googleapis.com/*",
-    "https://cdn.jsdelivr.net/*",
-    "https://img.kleinanzeigen.de/*",
-    "https://i.ebayimg.com/*",
-    "*://*/*"
-  ],
-
-  "content_scripts": [
-    {
-      "matches": ["https://www.kleinanzeigen.de/s-anzeige/*"],
-      "css": ["content.css"],
-      "js": ["dist/utils.js", "dist/content.js"]
+    "icons": {
+        "16": "app_icon.png",
+        "48": "app_icon.png",
+        "128": "app_icon.png"
     },
-    {
-      "matches": [
-        "https://www.kleinanzeigen.de/s-*",
-        "https://www.kleinanzeigen.de/"
-      ],
-      "exclude_matches": ["https://www.kleinanzeigen.de/s-anzeige/*"],
-      "css": ["content.css"],
-      "js": ["dist/utils.js", "dist/content-search.js"]
-    }
-  ],
 
-  "action": {
-    "default_popup": "popup.html",
-    "default_title": "KleinValue Advisor",
-    "default_icon": {
-      "16": "app_icon.png",
-      "48": "app_icon.png",
-      "128": "app_icon.png"
-    }
-  },
+    "permissions": ["storage", "activeTab"],
 
-  "options_page": "settings.html",
+    "host_permissions": [
+        "https://www.kleinanzeigen.de/*",
+        "https://generativelanguage.googleapis.com/*",
+        "https://cdn.jsdelivr.net/*",
+        "https://img.kleinanzeigen.de/*",
+        "https://i.ebayimg.com/*",
+        "*://*/*"
+    ],
 
-  "web_accessible_resources": [
-    {
-      "resources": ["dashboard.html", "dashboard.css", "dist/dashboard.js", "dist/utils.js"],
-      "matches": ["<all_urls>"]
-    }
-  ]
+    "content_scripts": [
+        {
+            "matches": ["https://www.kleinanzeigen.de/s-anzeige/*"],
+            "css": ["content.css"],
+            "js": ["dist/utils.js", "dist/content.js"]
+        },
+        {
+            "matches": ["https://www.kleinanzeigen.de/s-*", "https://www.kleinanzeigen.de/"],
+            "exclude_matches": ["https://www.kleinanzeigen.de/s-anzeige/*"],
+            "css": ["content.css"],
+            "js": ["dist/utils.js", "dist/content-search.js"]
+        }
+    ],
+
+    "action": {
+        "default_popup": "popup.html",
+        "default_title": "KleinValue Advisor",
+        "default_icon": {
+            "16": "app_icon.png",
+            "48": "app_icon.png",
+            "128": "app_icon.png"
+        }
+    },
+
+    "options_page": "settings.html",
+
+    "web_accessible_resources": [
+        {
+            "resources": ["dashboard.html", "dashboard.css", "dist/dashboard.js", "dist/utils.js"],
+            "matches": ["<all_urls>"]
+        }
+    ]
 }

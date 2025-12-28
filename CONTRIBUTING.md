@@ -21,15 +21,15 @@ npm install
 1. Create a feature branch: `git checkout -b feat/<short-description>`.
 2. Make your changes with readable commits.
 3. Run quality gates before pushing:
-   ```bash
-   npm run lint
-   npm run format:check
-   npm run build
-   ```
+    ```bash
+    npm run lint
+    npm run format:check
+    npm run build
+    ```
 4. Open a pull request that:
-   - Describes the change and motivation.
-   - Includes screenshots/GIFs for UI updates.
-   - Mentions any manual verification steps (e.g., loading the extension in Chrome).
+    - Describes the change and motivation.
+    - Includes screenshots/GIFs for UI updates.
+    - Mentions any manual verification steps (e.g., loading the extension in Chrome).
 
 ## Coding Standards
 

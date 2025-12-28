@@ -127,7 +127,7 @@ function attachAIEstimateToPrice(priceElement, estimation = {}) {
         }
     }
 
-    estimateContainer.addEventListener('click', function(e) {
+    estimateContainer.addEventListener('click', function (e) {
         e.stopPropagation();
         setExpanded(!expanded);
     });

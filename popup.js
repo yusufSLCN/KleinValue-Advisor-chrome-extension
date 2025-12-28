@@ -3,7 +3,7 @@
  * Loads and displays saved analyzed items from storage
  */
 
-document.addEventListener('DOMContentLoaded', async function() {
+document.addEventListener('DOMContentLoaded', async function () {
     await loadApiKeyStatus();
     loadAnalyzedItems();
     setupClearButton();
@@ -12,20 +12,21 @@ document.addEventListener('DOMContentLoaded', async function() {
 });
 
 function loadAnalyzedItems() {
-    chrome.storage.local.get(['analyzedItems'], function(data) {
+    chrome.storage.local.get(['analyzedItems'], function (data) {
         const itemsContainer = document.getElementById('items-container');
         const clearButton = document.getElementById('clear-all');
 
         let analyzedItems = data.analyzedItems || [];
 
         if (analyzedItems.length === 0) {
-            itemsContainer.innerHTML = '<div class="empty-state">No analyzed items yet. Analyze some on Kleinanzeigen!</div>';
+            itemsContainer.innerHTML =
+                '<div class="empty-state">No analyzed items yet. Analyze some on Kleinanzeigen!</div>';
             clearButton.style.display = 'none';
             return;
         }
 
         // Sort items by most recent analysis time (analyzedAt) in descending order
-        analyzedItems.sort(function(a, b) {
+        analyzedItems.sort(function (a, b) {
             const timeA = getAnalyzedDate(a)?.getTime() || 0;
             const timeB = getAnalyzedDate(b)?.getTime() || 0;
             return timeB - timeA; // Most recent first
@@ -34,7 +35,7 @@ function loadAnalyzedItems() {
         clearButton.style.display = 'block';
         itemsContainer.innerHTML = '';
 
-        analyzedItems.forEach(function(item) {
+        analyzedItems.forEach(function (item) {
             const itemCard = document.createElement('div');
             itemCard.className = 'item-card';
 
@@ -43,11 +44,13 @@ function loadAnalyzedItems() {
             image.className = 'item-image';
             if (item.images && item.images.length > 0) {
                 image.src = item.images[0];
-                image.onerror = function() {
-                    this.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjYwIiBmaWxsPSIjZjNmNGY2Ii8+CjxwYXRoIGQ9Ik0yMCAyMGgxMnYxMkgxOFoiIGZpbGw9IiM5Y2E0YWYiLz4KPHBhdGggZD0iTTMwIDIwaDEwdjEwaC0xMFoiIGZpbGw9IiM5Y2E0YWYiLz4KPHBhdGggZD0iTTIwIDMwaDEwdjEwaC0xMFoiIGZpbGw9IiM5Y2E0YWYiLz4KPHBhdGggZD0iTTMwIDMwaDEwdjEwaC0xMFoiIGZpbGw9IiM5Y2E0YWYiLz4KPC9zdmc+';
+                image.onerror = function () {
+                    this.src =
+                        'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjYwIiBmaWxsPSIjZjNmNGY2Ii8+CjxwYXRoIGQ9Ik0yMCAyMGgxMnYxMkgxOFoiIGZpbGw9IiM5Y2E0YWYiLz4KPHBhdGggZD0iTTMwIDIwaDEwdjEwaC0xMFoiIGZpbGw9IiM5Y2E0YWYiLz4KPHBhdGggZD0iTTIwIDMwaDEwdjEwaC0xMFoiIGZpbGw9IiM5Y2E0YWYiLz4KPHBhdGggZD0iTTMwIDMwaDEwdjEwaC0xMFoiIGZpbGw9IiM5Y2E0YWYiLz4KPC9zdmc+';
                 };
             } else {
-                image.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjYwIiBmaWxsPSIjZjNmNGY2Ii8+CjxwYXRoIGQ9Ik0yMCAyMGgxMnYxMkgxOFoiIGZpbGw9IiM5Y2E0YWYiLz4KPHBhdGggZD0iTTMwIDIwaDEwdjEwaC0xMFoiIGZpbGw9IiM5Y2E0YWYiLz4KPHBhdGggZD0iTTIwIDMwaDEwdjEwaC0xMFoiIGZpbGw9IiM5Y2E0YWYiLz4KPHBhdGggZD0iTTMwIDMwaDEwdjEwaC0xMFoiIGZpbGw9IiM5Y2E0YWYiLz4KPC9zdmc+';
+                image.src =
+                    'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjYwIiBmaWxsPSIjZjNmNGY2Ii8+CjxwYXRoIGQ9Ik0yMCAyMGgxMnYxMkgxOFoiIGZpbGw9IiM5Y2E0YWYiLz4KPHBhdGggZD0iTTMwIDIwaDEwdjEwaC0xMFoiIGZpbGw9IiM5Y2E0YWYiLz4KPHBhdGggZD0iTTIwIDMwaDEwdjEwaC0xMFoiIGZpbGw9IiM5Y2E0YWYiLz4KPHBhdGggZD0iTTMwIDMwaDEwdjEwaC0xMFoiIGZpbGw9IiM5Y2E0YWYiLz4KPC9zdmc+';
             }
 
             const contentDiv = document.createElement('div');
@@ -94,7 +97,11 @@ function loadAnalyzedItems() {
 
             const aiPrice = document.createElement('span');
             aiPrice.className = 'item-price-ai';
-            if (item.estimation && item.estimation.value !== null && item.estimation.value !== undefined) {
+            if (
+                item.estimation &&
+                item.estimation.value !== null &&
+                item.estimation.value !== undefined
+            ) {
                 aiPrice.textContent = `AI: €${item.estimation.value.toFixed(2)}`;
             } else {
                 aiPrice.textContent = 'AI: N/A';
@@ -150,9 +157,9 @@ function formatAnalyzedDate(dateObj) {
 }
 
 function setupClearButton() {
-    document.getElementById('clear-all').addEventListener('click', function() {
+    document.getElementById('clear-all').addEventListener('click', function () {
         if (confirm('Clear all analyzed items?')) {
-            chrome.storage.local.set({analyzedItems: []}, function() {
+            chrome.storage.local.set({ analyzedItems: [] }, function () {
                 loadAnalyzedItems();
             });
         }
@@ -171,7 +178,7 @@ async function loadApiKeyStatus() {
 function setupSettingsButton() {
     const settingsBtn = document.getElementById('settings-btn');
     if (settingsBtn) {
-        settingsBtn.addEventListener('click', function() {
+        settingsBtn.addEventListener('click', function () {
             chrome.tabs.create({
                 url: chrome.runtime.getURL('settings.html'),
                 active: true
@@ -183,7 +190,7 @@ function setupSettingsButton() {
 function setupExpandButton() {
     const expandBtn = document.getElementById('expand-btn');
     if (expandBtn) {
-        expandBtn.addEventListener('click', function() {
+        expandBtn.addEventListener('click', function () {
             // Open the extension dashboard in a new tab
             chrome.management.getSelf((info) => {
                 const dashboardUrl = `chrome-extension://${info.id}/dashboard.html`;
@@ -192,12 +199,12 @@ function setupExpandButton() {
         });
 
         // Add hover effects
-        expandBtn.addEventListener('mouseenter', function() {
+        expandBtn.addEventListener('mouseenter', function () {
             this.style.transform = 'translateY(-1px)';
             this.style.boxShadow = '0 4px 8px rgba(0,0,0,0.15)';
         });
 
-        expandBtn.addEventListener('mouseleave', function() {
+        expandBtn.addEventListener('mouseleave', function () {
             this.style.transform = 'translateY(0)';
             this.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
         });

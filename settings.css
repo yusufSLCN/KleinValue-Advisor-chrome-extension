@@ -19,10 +19,14 @@ body {
     margin: 0;
     min-height: 100vh;
     padding: 32px;
-    font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
-    background: radial-gradient(circle at top, rgba(140, 123, 255, 0.25), transparent 45%),
-        radial-gradient(circle at 20% 20%, rgba(14, 165, 233, 0.15), transparent 40%),
-        var(--bg);
+    font-family:
+        'Space Grotesk',
+        -apple-system,
+        BlinkMacSystemFont,
+        sans-serif;
+    background:
+        radial-gradient(circle at top, rgba(140, 123, 255, 0.25), transparent 45%),
+        radial-gradient(circle at 20% 20%, rgba(14, 165, 233, 0.15), transparent 40%), var(--bg);
     color: var(--text);
 }
 
@@ -82,7 +86,10 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.08);
     background: rgba(255, 255, 255, 0.02);
     cursor: pointer;
-    transition: transform 0.25s ease, border 0.25s ease, background 0.25s ease;
+    transition:
+        transform 0.25s ease,
+        border 0.25s ease,
+        background 0.25s ease;
 }
 
 .provider-card.active {
@@ -213,7 +220,9 @@ select:focus {
     font-size: 0.95rem;
     cursor: pointer;
     font-family: 'Space Grotesk', sans-serif;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
 }
 
 .btn.primary {
