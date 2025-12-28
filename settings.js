@@ -18,9 +18,7 @@ function cacheElements() {
         modelSelect: document.getElementById('model-select'),
         refreshButton: document.getElementById('refresh-models'),
         maxImagesInput: document.getElementById('max-images'),
-        confidenceInput: document.getElementById('confidence-threshold'),
         temperatureInput: document.getElementById('temperature'),
-        randomSeedInput: document.getElementById('random-seed'),
         enableImagesToggle: document.getElementById('enable-images'),
         autoAnalyzeToggle: document.getElementById('auto-analyze'),
         saveButton: document.getElementById('save'),
@@ -36,8 +34,7 @@ function createInitialState() {
         providerModelSelections: {},
         providerModels: {},
         maxImages: 4,
-        confidenceThreshold: 70,
-        temperature: 0.2,
+        temperature: 0,
         randomSeed: 1337,
         enableImages: true,
         autoAnalyze: true
@@ -93,7 +90,6 @@ function loadSettings(elements, state) {
         'maxImages',
         'enableImages',
         'autoAnalyze',
-        'confidenceThreshold',
         'temperature',
         'randomSeed'
     ];
@@ -124,9 +120,6 @@ function loadSettings(elements, state) {
         state.maxImages = result.maxImages || state.maxImages;
         state.enableImages = result.enableImages !== false;
         state.autoAnalyze = result.autoAnalyze !== false;
-        state.confidenceThreshold = typeof result.confidenceThreshold === 'number'
-            ? result.confidenceThreshold
-            : state.confidenceThreshold;
         state.temperature = typeof result.temperature === 'number'
             ? result.temperature
             : state.temperature;
@@ -144,9 +137,7 @@ function hydrateForm(elements, state) {
     populateModelSelect(elements, state);
 
     elements.maxImagesInput.value = state.maxImages;
-    elements.confidenceInput.value = state.confidenceThreshold;
     elements.temperatureInput.value = state.temperature;
-    elements.randomSeedInput.value = state.randomSeed;
     elements.enableImagesToggle.checked = state.enableImages;
     elements.autoAnalyzeToggle.checked = state.autoAnalyze;
 }
@@ -173,19 +164,33 @@ function updateApiKeyUI(elements, state) {
 
 function populateModelSelect(elements, state) {
     const provider = getProviderMeta(state.selectedProvider);
-    const models = state.providerModels[state.selectedProvider] || provider.suggestedModels;
+    const models = (state.providerModels[state.selectedProvider] && state.providerModels[state.selectedProvider].length
+        ? state.providerModels[state.selectedProvider]
+        : provider.suggestedModels) || [];
     const currentSelection = state.providerModelSelections[state.selectedProvider] || provider.defaultModel;
 
     elements.modelSelect.innerHTML = '';
 
+    const seen = new Set();
+    const recommendedModel = getRecommendedModelOption(provider, models);
+
+    if (recommendedModel) {
+        appendOption(elements.modelSelect, recommendedModel, seen, { recommended: true });
+    }
+
     models.forEach(model => {
-        const option = document.createElement('option');
-        option.value = model.id;
-        option.textContent = model.label;
-        elements.modelSelect.appendChild(option);
+        appendOption(elements.modelSelect, model, seen);
     });
 
-    elements.modelSelect.value = currentSelection;
+    const optionValues = Array.from(elements.modelSelect.options).map(option => option.value);
+    if (optionValues.includes(currentSelection)) {
+        elements.modelSelect.value = currentSelection;
+    } else if (optionValues.includes(provider.defaultModel)) {
+        elements.modelSelect.value = provider.defaultModel;
+    } else if (elements.modelSelect.options.length) {
+        elements.modelSelect.selectedIndex = 0;
+    }
+
     state.providerModelSelections[state.selectedProvider] = elements.modelSelect.value;
 }
 
@@ -283,28 +288,14 @@ function buildPayload(state, elements) {
         return null;
     }
 
-    const confidence = Number(elements.confidenceInput.value);
-    if (Number.isNaN(confidence) || confidence < 0 || confidence > 100) {
-        showStatus(elements.status, 'Confidence threshold must be between 0 and 100.', 'error');
-        return null;
-    }
-
     const temperature = Number(elements.temperatureInput.value);
     if (Number.isNaN(temperature) || temperature < 0 || temperature > 2) {
         showStatus(elements.status, 'Temperature must be between 0 and 2.', 'error');
         return null;
     }
 
-    const randomSeed = Number(elements.randomSeedInput.value);
-    if (!Number.isInteger(randomSeed) || randomSeed < 0 || randomSeed > 2147483647) {
-        showStatus(elements.status, 'Seed must be between 0 and 2,147,483,647.', 'error');
-        return null;
-    }
-
     state.maxImages = maxImages;
-    state.confidenceThreshold = confidence;
     state.temperature = temperature;
-    state.randomSeed = randomSeed;
     state.enableImages = elements.enableImagesToggle.checked;
     state.autoAnalyze = elements.autoAnalyzeToggle.checked;
 
@@ -319,7 +310,6 @@ function buildPayload(state, elements) {
         maxImages: state.maxImages,
         enableImages: state.enableImages,
         autoAnalyze: state.autoAnalyze,
-        confidenceThreshold: state.confidenceThreshold,
         temperature: state.temperature,
         randomSeed: state.randomSeed
     };
@@ -348,4 +338,52 @@ async function withBusyButton(button, fn) {
     } finally {
         button.disabled = false;
     }
+}
+
+function appendOption(selectEl, model, seen, { recommended = false } = {}) {
+    if (!model?.id || seen.has(model.id)) {
+        return;
+    }
+
+    const option = document.createElement('option');
+    option.value = model.id;
+    option.textContent = recommended
+        ? `★ Recommended • ${model.label}`
+        : model.label;
+
+    if (recommended) {
+        option.dataset.recommended = 'true';
+    }
+
+    selectEl.appendChild(option);
+    seen.add(model.id);
+}
+
+function getRecommendedModelOption(provider, models) {
+    if (!provider.defaultModel) {
+        return null;
+    }
+
+    const combined = [...models, ...(provider.suggestedModels || [])];
+    const match = combined.find(model => model.id === provider.defaultModel);
+
+    if (!match) {
+        return {
+            id: provider.defaultModel,
+            label: formatModelLabel(provider.defaultModel)
+        };
+    }
+
+    return {
+        id: provider.defaultModel,
+        label: match.label
+    };
+}
+
+function formatModelLabel(id) {
+    return id
+        .replace(/-/g, ' ')
+        .replace(/\s+/g, ' ')
+        .replace(/\b\w/g, char => char.toUpperCase())
+        .trim();
 }

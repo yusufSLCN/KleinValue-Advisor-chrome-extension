@@ -12,7 +12,7 @@ A powerful Chrome extension that analyzes Kleinanzeigen listings using Google Ge
 ### 🤖 Advanced AI Analysis
 - **Latest Foundation Models**: Choose between Gemini 2.5 (Flash/Pro/Lite), GPT-4.1 / GPT-4o variants, or Claude 3.5 families
 - **Visual Analysis**: AI analyzes product images for condition, quality, and features
-- **Confidence Scoring**: Real confidence scores (0-100) with customizable thresholds
+- **Confidence Scoring**: Real confidence scores (0-100) surfaced on every estimate
 - **Smart Image Processing**: Automatically finds and processes all product images
 - **Search Page Integration**: AI price indicators appear on search results for analyzed items
 - **Bargain Detection**: Automatic highlighting of potential deals on search pages
@@ -27,7 +27,7 @@ A powerful Chrome extension that analyzes Kleinanzeigen listings using Google Ge
 ### ⚙️ Comprehensive Settings
 - **Provider Studio**: Gradient-rich settings surface with provider cards, contextual docs links, and per-provider API key management
 - **Live Model Picker**: Refresh model lists straight from each provider's API and persist selections separately
-- **Analysis Controls**: Configure temperature, confidence thresholds, image usage, and automation in a single responsive grid
+- **Analysis Controls**: Configure temperature, image usage, and automation in a single responsive grid
 - **One-Click Testing**: Validate keys and fetch models simultaneously with real-time status banners
 
 ### 💰 Cost Transparency
@@ -71,7 +71,7 @@ A powerful Chrome extension that analyzes Kleinanzeigen listings using Google Ge
 
 2. **Customize Settings**
    - Pick a model per provider (e.g., Gemini 2.5 Flash, GPT-4.1 Mini, or Claude 3.5 Sonnet)
-   - Tune confidence threshold, auto-analysis, and temperature in the Analysis Controls block
+   - Tune auto-analysis behavior, temperature, and image usage in the Analysis Controls block
    - Refresh models anytime to stay current with the provider's catalog
 
 ## 📖 How to Use
@@ -99,7 +99,7 @@ A powerful Chrome extension that analyzes Kleinanzeigen listings using Google Ge
 
 ### Advanced Features
 - **Visual Analysis**: AI examines product images for accurate assessments
-- **Confidence Filtering**: Only shows estimates above your threshold
+- **Confidence Display**: Always shows AI certainty scores alongside values
 - **Cost Tracking**: Monitor API usage and costs in real-time
 - **Model Selection**: Choose different AI models for speed vs. accuracy
 - **Smart Image Processing**: Automatic image discovery and filtering
@@ -164,9 +164,9 @@ chrome_extension/
 ## 🎯 Advanced Features
 
 ### AI Confidence System
-- Real confidence scores from Gemini AI
-- Configurable thresholds (0-100%)
-- Only displays estimates above your threshold
+- Real confidence scores surfaced directly from each provider
+- Always displayed with every estimate for transparency
+- Helps you decide when to trust, retry, or compare listings
 
 ### Cost Optimization
 - Automatic cost calculation per request
