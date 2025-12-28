@@ -1,11 +1,16 @@
 # KleinValue Advisor - Advanced AI Chrome Extension
 
-A powerful Chrome extension that analyzes Kleinanzeigen listings using Google's latest Gemini AI models to provide accurate market value estimates with visual analysis.
+A powerful Chrome extension that analyzes Kleinanzeigen listings using Google Gemini, OpenAI GPT-4o/4.1, or Anthropic Claude models—complete with dynamic model catalogs, visual analysis, and transparent cost tracking.
 
 ## ✨ Key Features
 
+### 🔌 Multi-Provider Flexibility
+- **One UI, Three Providers**: Seamlessly switch between Google Gemini, OpenAI GPT-4o/4.1, or Anthropic Claude without leaving the extension.
+- **Live Model Catalogs**: Fetch the latest deployable models directly from each provider's API and pin your favorites per provider.
+- **Per-Provider API Keys**: Securely store different API keys and model selections; the estimator automatically loads the right backend at runtime.
+
 ### 🤖 Advanced AI Analysis
-- **Latest Gemini 2.5 Models**: Access to cutting-edge AI with Gemini 2.5 Flash, Pro, and Flash-Lite
+- **Latest Foundation Models**: Choose between Gemini 2.5 (Flash/Pro/Lite), GPT-4.1 / GPT-4o variants, or Claude 3.5 families
 - **Visual Analysis**: AI analyzes product images for condition, quality, and features
 - **Confidence Scoring**: Real confidence scores (0-100) with customizable thresholds
 - **Smart Image Processing**: Automatically finds and processes all product images
@@ -20,10 +25,10 @@ A powerful Chrome extension that analyzes Kleinanzeigen listings using Google's 
 - **Responsive Layout**: Optimized for all screen sizes
 
 ### ⚙️ Comprehensive Settings
-- **Model Selection**: Choose from multiple Gemini models for different use cases
-- **Image Controls**: Configure maximum images and enable/disable visual analysis
-- **Confidence Threshold**: Set minimum confidence level for displaying estimates
-- **Auto-Analysis**: Toggle automatic analysis when visiting listings
+- **Provider Studio**: Gradient-rich settings surface with provider cards, contextual docs links, and per-provider API key management
+- **Live Model Picker**: Refresh model lists straight from each provider's API and persist selections separately
+- **Analysis Controls**: Configure temperature, confidence thresholds, image usage, and automation in a single responsive grid
+- **One-Click Testing**: Validate keys and fetch models simultaneously with real-time status banners
 
 ### 💰 Cost Transparency
 - **Real-time Cost Tracking**: Shows actual API costs per analysis
@@ -35,6 +40,7 @@ A powerful Chrome extension that analyzes Kleinanzeigen listings using Google's 
 - **Serverless Architecture**: All processing happens client-side
 - **Local Storage**: Data persists securely in Chrome storage
 - **Modular Design**: Clean, maintainable codebase with webpack bundling and shared `lib/` modules for estimator, storage, and factory logic
+- **Provider Registry**: Central metadata + estimator registry powers multi-provider switching without code duplication
 - **Error Handling**: Robust error handling and fallback mechanisms
 
 ## 🚀 Quick Start
@@ -59,15 +65,14 @@ A powerful Chrome extension that analyzes Kleinanzeigen listings using Google's 
 ### Configuration
 1. **API Key Setup**
    - Click the extension icon in Chrome toolbar
-   - Click the settings (⚙️) button
-   - Enter your Google Gemini API key
-   - Test the connection
+   - Open the settings (⚙️) panel
+   - Select your preferred provider card (Gemini, OpenAI, or Anthropic)
+   - Paste the corresponding API key and run **Test Key** to fetch the live model list
 
 2. **Customize Settings**
-   - Choose your preferred AI model (Gemini 2.5 Flash recommended)
-   - Set confidence threshold (70% recommended)
-   - Configure image analysis settings
-   - Enable auto-analysis for seamless experience
+   - Pick a model per provider (e.g., Gemini 2.5 Flash, GPT-4.1 Mini, or Claude 3.5 Sonnet)
+   - Tune confidence threshold, auto-analysis, and temperature in the Analysis Controls block
+   - Refresh models anytime to stay current with the provider's catalog
 
 ## 📖 How to Use
 
@@ -108,7 +113,7 @@ A powerful Chrome extension that analyzes Kleinanzeigen listings using Google's 
 - `npm run build` - Production build with minification & asset copying
 
 ### Architecture
-- **🤖 AI-First**: Latest Gemini 2.5 models with multimodal capabilities
+- **🤖 AI-First**: Live provider registry spanning Gemini 2.5, GPT-4.1/4o, and Claude 3.5 families
 - **🎨 Modern UI**: Responsive design with smooth animations
 - **🔒 Privacy-Focused**: All data stored locally, no external servers
 - **⚡ Performance**: Optimized bundling and efficient API usage
@@ -120,8 +125,14 @@ A powerful Chrome extension that analyzes Kleinanzeigen listings using Google's 
 ```
 chrome_extension/
 ├── manifest.json          # Extension configuration & permissions
-├── lib/                  # Shared modules (Gemini estimator + storage manager)
+├── lib/                  # Shared estimators, storage, and provider registry
 │   ├── gemini-estimator.js
+│   ├── openai-estimator.js
+│   ├── anthropic-estimator.js
+│   ├── estimation-core.js
+│   ├── providers/
+│   │   ├── metadata.js
+│   │   └── registry.js
 │   ├── storage-manager.js
 │   └── index.js
 ├── content.js            # Injects analysis UI on Kleinanzeigen pages
@@ -135,18 +146,20 @@ chrome_extension/
 
 ## 🔑 API Configuration
 
-### Getting Your Gemini API Key
-Visit: https://aistudio.google.com/app/apikey
+### Getting API Keys
+- **Google Gemini**: https://aistudio.google.com/app/apikey
+- **OpenAI Platform**: https://platform.openai.com/api-keys
+- **Anthropic Claude**: https://console.anthropic.com/account/keys
 
-### Rate Limits (Free Tier)
-- **60 requests/minute**
-- **1,500 requests/day**
-- **Free for personal use**
+### Rate Limits (Reference)
+- **Gemini Free Tier**: 60 requests/minute • 1,500 requests/day • Free for personal use
+- **OpenAI & Anthropic**: Follow the quota shown in your provider console (varies per billing plan)
 
 ### Model Recommendations
-- **Gemini 2.5 Flash**: Best balance of speed and accuracy (recommended)
-- **Gemini 2.5 Pro**: Maximum intelligence for complex items
-- **Gemini 2.5 Flash-Lite**: Fastest processing for simple items
+- **Gemini 2.5 Flash**: Best balance of speed and accuracy (defaults in settings)
+- **GPT-4.1 Mini**: Fast GPT family member with excellent reasoning, great for text-heavy listings
+- **Claude 3.5 Sonnet**: Strong structured reasoning with concise JSON responses
+- **Gemini 2.5 Pro**: Maximum intelligence for complex items requiring multimodal context
 
 ## 🎯 Advanced Features
 

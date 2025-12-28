@@ -85,6 +85,7 @@ function attachAIEstimateToPrice(priceElement, estimation = {}) {
     const hasNumericValue = typeof value === 'number' && Number.isFinite(value);
     const summaryValue = hasNumericValue ? value.toFixed(0) : 'N/A';
     const detailedValue = hasNumericValue ? value.toFixed(2) : 'N/A';
+    const providerLabel = estimation.providerName || estimation.provider || '';
 
     const estimateContainer = document.createElement('div');
     estimateContainer.id = 'ai-estimate-container';
@@ -110,8 +111,9 @@ function attachAIEstimateToPrice(priceElement, estimation = {}) {
             <div class="ai-details-section-text">${reasoning || 'No reasoning provided'}</div>
         </div>
         <div class="ai-details-footer">
-            ${estimation.model ? `<div><strong>Model:</strong> ${estimation.model}</div>` : ''}
-            ${!isError && cost ? `<div><strong>API Cost:</strong> ${cost.formatted} (${cost.totalTokens} tokens)</div>` : ''}
+            ${estimation.model ? `<div><strong>Model:</strong> ${providerLabel ? `${providerLabel} · ` : ''}${estimation.model}</div>` : ''}
+            ${!estimation.model && providerLabel ? `<div><strong>Provider:</strong> ${providerLabel}</div>` : ''}
+            ${!isError && cost ? `<div><strong>API Cost:</strong> ${cost.formatted}${typeof cost.totalTokens === 'number' ? ` (${cost.totalTokens} tokens)` : ''}</div>` : ''}
         </div>
     `;
 
