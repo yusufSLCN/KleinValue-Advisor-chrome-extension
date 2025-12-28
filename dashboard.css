@@ -358,7 +358,7 @@ body {
 .btn-secondary:hover { background: #5a6268; }
 
 .btn-danger {
-    background: #ff001970; color: white; border: none; padding: 4px 8px;
+    background: #c40014; color: white; border: none; padding: 4px 8px;
     border-radius: 6px; cursor: pointer; font-size: 1.2em;
     transition: all 0.2s ease;
     display: inline-flex; align-items: center; justify-content: center;
