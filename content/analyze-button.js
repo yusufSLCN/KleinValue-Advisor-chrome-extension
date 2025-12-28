@@ -133,15 +133,6 @@ function createInjectAIAnalysisButton({
                     this.itemData.isGoodValue = false;
                     this.itemData.analyzed_at = new Date().toISOString();
 
-                    try {
-                        await storageManager.saveItem(this.itemData, errorEstimation);
-                    } catch (saveError) {
-                        if (saveError.message.includes('Extension context invalidated')) {
-                            console.log('Extension reloaded during error save, item not saved');
-                        } else {
-                            console.error('Error saving error estimation:', saveError);
-                        }
-                    }
                     injectAIEstimate(errorEstimation);
                 }
 

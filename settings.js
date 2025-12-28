@@ -1,11 +1,13 @@
 const { PROVIDERS, getProviderMeta } = require('./lib/providers/metadata');
 
+const AUTO_SAVE_DEBOUNCE_MS = 800;
+
 document.addEventListener('DOMContentLoaded', () => {
     const elements = cacheElements();
     const state = createInitialState();
 
     renderProviderCards(elements, state);
-    selectProvider(state.selectedProvider, state, elements);
+    selectProvider(state.selectedProvider, state, elements, { userInitiated: false });
     bindEvents(elements, state);
     loadSettings(elements, state);
 });
@@ -20,8 +22,6 @@ function cacheElements() {
         maxImagesInput: document.getElementById('max-images'),
         temperatureInput: document.getElementById('temperature'),
         enableImagesToggle: document.getElementById('enable-images'),
-        autoAnalyzeToggle: document.getElementById('auto-analyze'),
-        saveButton: document.getElementById('save'),
         testButton: document.getElementById('test'),
         status: document.getElementById('status')
     };
@@ -37,7 +37,9 @@ function createInitialState() {
         temperature: 0,
         randomSeed: 1337,
         enableImages: true,
-        autoAnalyze: true
+        autoSaveTimer: null,
+        isHydrating: true,
+        lastAutoSaveNotice: 0
     };
 }
 
@@ -53,7 +55,9 @@ function renderProviderCards(elements, state) {
             <strong>${provider.icon} ${provider.name}</strong>
             <span>${provider.tagline}</span>
         `;
-        card.addEventListener('click', () => selectProvider(provider.id, state, elements));
+        card.addEventListener('click', () =>
+            selectProvider(provider.id, state, elements, { userInitiated: true })
+        );
         container.appendChild(card);
     });
 }
@@ -61,10 +65,12 @@ function renderProviderCards(elements, state) {
 function bindEvents(elements, state) {
     elements.modelSelect.addEventListener('change', () => {
         state.providerModelSelections[state.selectedProvider] = elements.modelSelect.value;
+        maybeScheduleAutoSave(state, elements);
     });
 
     elements.apiKeyInput.addEventListener('input', () => {
         state.providerApiKeys[state.selectedProvider] = elements.apiKeyInput.value.trim();
+        maybeScheduleAutoSave(state, elements);
     });
 
     elements.refreshButton.addEventListener('click', async () => {
@@ -75,7 +81,20 @@ function bindEvents(elements, state) {
         await withBusyButton(elements.testButton, async () => testApiKey(state, elements));
     });
 
-    elements.saveButton.addEventListener('click', () => saveSettings(state, elements));
+    elements.maxImagesInput.addEventListener('change', () => {
+        state.maxImages = Number(elements.maxImagesInput.value);
+        maybeScheduleAutoSave(state, elements);
+    });
+
+    elements.temperatureInput.addEventListener('input', () => {
+        state.temperature = Number(elements.temperatureInput.value);
+        maybeScheduleAutoSave(state, elements);
+    });
+
+    elements.enableImagesToggle.addEventListener('change', () => {
+        state.enableImages = elements.enableImagesToggle.checked;
+        maybeScheduleAutoSave(state, elements);
+    });
 }
 
 function loadSettings(elements, state) {
@@ -89,7 +108,6 @@ function loadSettings(elements, state) {
         'modelName',
         'maxImages',
         'enableImages',
-        'autoAnalyze',
         'temperature',
         'randomSeed'
     ];
@@ -97,6 +115,7 @@ function loadSettings(elements, state) {
     chrome.storage.local.get(keys, (result) => {
         if (chrome.runtime.lastError) {
             showStatus(elements.status, chrome.runtime.lastError.message, 'error');
+            state.isHydrating = false;
             return;
         }
 
@@ -119,7 +138,6 @@ function loadSettings(elements, state) {
 
         state.maxImages = result.maxImages || state.maxImages;
         state.enableImages = result.enableImages !== false;
-        state.autoAnalyze = result.autoAnalyze !== false;
         state.temperature =
             typeof result.temperature === 'number' ? result.temperature : state.temperature;
         state.randomSeed = Number.isInteger(result.randomSeed)
@@ -127,6 +145,7 @@ function loadSettings(elements, state) {
             : state.randomSeed;
 
         hydrateForm(elements, state);
+        state.isHydrating = false;
     });
 }
 
@@ -138,7 +157,6 @@ function hydrateForm(elements, state) {
     elements.maxImagesInput.value = state.maxImages;
     elements.temperatureInput.value = state.temperature;
     elements.enableImagesToggle.checked = state.enableImages;
-    elements.autoAnalyzeToggle.checked = state.autoAnalyze;
 }
 
 function updateActiveProviderCard(state) {
@@ -147,11 +165,15 @@ function updateActiveProviderCard(state) {
     });
 }
 
-function selectProvider(providerId, state, elements) {
+function selectProvider(providerId, state, elements, { userInitiated = false } = {}) {
+    const previousProvider = state.selectedProvider;
     state.selectedProvider = providerId;
     updateActiveProviderCard(state);
     updateApiKeyUI(elements, state);
     populateModelSelect(elements, state);
+    if (userInitiated && previousProvider !== providerId) {
+        maybeScheduleAutoSave(state, elements);
+    }
 }
 
 function updateApiKeyUI(elements, state) {
@@ -264,30 +286,65 @@ async function testApiKey(state, elements) {
     }
 }
 
-function saveSettings(state, elements) {
-    const payload = buildPayload(state, elements);
+function saveSettings(state, elements, { silent = true, requireApiKey = false } = {}) {
+    const payload = buildPayload(state, elements, { requireApiKey });
     if (!payload) {
         return;
     }
 
-    showStatus(elements.status, 'Saving settings...', 'info');
+    if (!silent) {
+        showStatus(elements.status, 'Saving settings...', 'info');
+    }
 
     chrome.storage.local.set(payload, () => {
         if (chrome.runtime.lastError) {
-            showStatus(elements.status, chrome.runtime.lastError.message, 'error');
+            if (!silent) {
+                showStatus(elements.status, chrome.runtime.lastError.message, 'error');
+            } else {
+                console.warn('Auto-save failed:', chrome.runtime.lastError.message);
+            }
             return;
         }
         if (window.globalEstimator) {
             window.globalEstimator = null;
         }
-        showStatus(elements.status, 'Settings saved. Ready for your next listing!', 'success');
+        if (silent) {
+            indicateAutoSaved(state, elements);
+        } else {
+            showStatus(elements.status, 'Settings saved. Ready for your next listing!', 'success');
+        }
     });
 }
 
-function buildPayload(state, elements) {
+function scheduleAutoSave(state, elements) {
+    if (state.autoSaveTimer) {
+        clearTimeout(state.autoSaveTimer);
+    }
+    state.autoSaveTimer = setTimeout(() => {
+        saveSettings(state, elements, { silent: true, requireApiKey: false });
+    }, AUTO_SAVE_DEBOUNCE_MS);
+}
+
+function maybeScheduleAutoSave(state, elements) {
+    if (state.isHydrating) {
+        return;
+    }
+    scheduleAutoSave(state, elements);
+}
+
+function indicateAutoSaved(state, elements) {
+    const now = Date.now();
+    if (now - state.lastAutoSaveNotice < 1500) {
+        return;
+    }
+    state.lastAutoSaveNotice = now;
+    showStatus(elements.status, 'Settings auto-saved', 'success');
+}
+
+function buildPayload(state, elements, { requireApiKey = true } = {}) {
     const provider = getProviderMeta(state.selectedProvider);
     const apiKey = (state.providerApiKeys[state.selectedProvider] || '').trim();
-    if (!apiKey) {
+    if (requireApiKey && !apiKey) {
         showStatus(
             elements.status,
             `Add your ${provider.shortName} API key before saving.`,
@@ -311,7 +368,6 @@ function buildPayload(state, elements) {
     state.maxImages = maxImages;
     state.temperature = temperature;
     state.enableImages = elements.enableImagesToggle.checked;
-    state.autoAnalyze = elements.autoAnalyzeToggle.checked;
 
     const payload = {
         aiProvider: state.selectedProvider,
@@ -323,7 +379,6 @@ function buildPayload(state, elements) {
         modelName: state.providerModelSelections[state.selectedProvider],
         maxImages: state.maxImages,
         enableImages: state.enableImages,
-        autoAnalyze: state.autoAnalyze,
         temperature: state.temperature,
         randomSeed: state.randomSeed
     };

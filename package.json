@@ -24,12 +24,12 @@
     "license": "MIT",
     "repository": {
         "type": "git",
-        "url": "https://github.com/yusufsalcan/kleinvalue-advisor"
+        "url": "https://github.com/yusufSLCN/KleinValue-Advisor-chrome-extension"
     },
     "bugs": {
-        "url": "https://github.com/yusufsalcan/kleinvalue-advisor/issues"
+        "url": "https://github.com/yusufSLCN/KleinValue-Advisor-chrome-extension/issues"
     },
-    "homepage": "https://github.com/yusufsalcan/kleinvalue-advisor#readme",
+    "homepage": "https://github.com/yusufSLCN/KleinValue-Advisor-chrome-extension#readme",
     "engines": {
         "node": ">=18.0.0"
     },

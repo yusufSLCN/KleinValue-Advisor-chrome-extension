@@ -38,7 +38,7 @@ AI-powered Chrome extension for analyzing Kleinanzeigen listings with Google Gem
 ## Getting Started
 
 ```bash
-git clone https://github.com/yusufsalcan/kleinvalue-advisor.git
+git clone https://github.com/yusufSLCN/KleinValue-Advisor-chrome-extension.git
 cd kleinvalue-advisor
 npm install
 npm run build
@@ -123,7 +123,7 @@ Automated tests will arrive in a future release (`npm test` is intentionally omi
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for local setup, coding standards, and commit guidelines. In short:
+See [CONTRIBUTING.md](CONTRIBUTING.md) for local setup, coding standards, and commit guidelines, and review the [Privacy Policy](PRIVACY_POLICY.md) before distributing the bundle. In short:
 
 1. Fork & branch (`feat/<short-description>`).
 2. Run `npm run format:check` (and optionally `npm run build`) before pushing.

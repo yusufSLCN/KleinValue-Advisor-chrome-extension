@@ -11,7 +11,7 @@ Thanks for taking time to improve KleinValue Advisor! A polished repo helps recr
 ## Local Setup
 
 ```bash
-git clone https://github.com/yusufsalcan/kleinvalue-advisor.git
+git clone https://github.com/yusufSLCN/KleinValue-Advisor-chrome-extension.git
 cd kleinvalue-advisor
 npm install
 ```

@@ -83,8 +83,9 @@ body {
 .provider-card {
     border-radius: 18px;
     padding: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.18);
+    color: #0c0f19;
     cursor: pointer;
     transition:
         transform 0.25s ease,
@@ -93,19 +94,19 @@ body {
 }
 
 .provider-card.active {
-    border-color: rgba(255, 255, 255, 0.6);
+    border-color: rgba(255, 255, 255, 0.95);
     transform: translateY(-4px);
-    background: rgba(255, 255, 255, 0.06);
+    background: rgba(255, 255, 255, 0.95);
 }
 
 .provider-card strong {
     display: block;
     font-size: 1.1rem;
+    color: #0f1118;
 }
 
 .provider-card span {
-    font-size: 0.9rem;
-    color: var(--muted);
+    display: none;
 }
 
 .field-group {
@@ -204,13 +205,6 @@ select:focus {
 
 .toggle input:checked + .slider:before {
     transform: translateX(20px);
-}
-
-.actions {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-    margin-top: 12px;
 }
 
 .btn {
