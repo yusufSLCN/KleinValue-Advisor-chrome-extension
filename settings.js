@@ -20,6 +20,7 @@ function cacheElements() {
         modelSelect: document.getElementById('model-select'),
         refreshButton: document.getElementById('refresh-models'),
         maxImagesInput: document.getElementById('max-images'),
+        maxImagesField: document.getElementById('max-images-field'),
         temperatureInput: document.getElementById('temperature'),
         enableImagesToggle: document.getElementById('enable-images'),
         testButton: document.getElementById('test'),
@@ -93,6 +94,7 @@ function bindEvents(elements, state) {
 
     elements.enableImagesToggle.addEventListener('change', () => {
         state.enableImages = elements.enableImagesToggle.checked;
+        syncImageFieldVisibility(state, elements);
         maybeScheduleAutoSave(state, elements);
     });
 }
@@ -157,6 +159,15 @@ function hydrateForm(elements, state) {
     elements.maxImagesInput.value = state.maxImages;
     elements.temperatureInput.value = state.temperature;
     elements.enableImagesToggle.checked = state.enableImages;
+    syncImageFieldVisibility(state, elements);
+}
+
+function syncImageFieldVisibility(state, elements) {
+    const showImages = Boolean(state.enableImages);
+    if (elements.maxImagesField) {
+        elements.maxImagesField.classList.toggle('hidden', !showImages);
+    }
+    elements.maxImagesInput.disabled = !showImages;
 }
 
 function updateActiveProviderCard(state) {

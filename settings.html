@@ -53,7 +53,20 @@
             <section class="panel">
                 <h3>Analysis Controls</h3>
                 <div class="field-group">
-                    <div class="field">
+                    <div class="toggle-row inline">
+                        <div>
+                            <strong>Image Analysis</strong>
+                            <span
+                                >Include gallery visuals in prompts (Gemini supports inline
+                                vision).</span
+                            >
+                        </div>
+                        <label class="toggle">
+                            <input type="checkbox" id="enable-images" />
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="field image-field" id="max-images-field">
                         <label for="max-images">Max Images</label>
                         <input
                             type="number"
@@ -75,33 +88,6 @@
                             placeholder="0"
                         />
                     </div>
-                </div>
-            </section>
-
-            <section class="panel">
-                <h3>Automations</h3>
-                <div class="toggle-row">
-                    <div>
-                        <strong>Image Analysis</strong>
-                        <span
-                            >Include gallery visuals in prompts (Gemini supports inline
-                            vision).</span
-                        >
-                    </div>
-                    <label class="toggle">
-                        <input type="checkbox" id="enable-images" />
-                        <span class="slider"></span>
-                    </label>
-                </div>
-                <div class="toggle-row">
-                    <div>
-                        <strong>Auto-analyze Listings</strong>
-                        <span>Immediately run the estimator when a Kleinanzeigen page loads.</span>
-                    </div>
-                    <label class="toggle">
-                        <input type="checkbox" id="auto-analyze" />
-                        <span class="slider"></span>
-                    </label>
                 </div>
             </section>
 

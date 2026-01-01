@@ -121,6 +121,10 @@ body {
     gap: 6px;
 }
 
+.image-field.hidden {
+    display: none;
+}
+
 label {
     font-size: 0.9rem;
     letter-spacing: 0.04em;
