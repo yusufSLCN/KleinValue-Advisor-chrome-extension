@@ -1,0 +1,92 @@
+[
+  {
+    "id": "sample-01",
+    "url": "https://www.kleinanzeigen.de/s-anzeige/vintage-road-bike/1234567890-217-1234",
+    "title": "Vintage Road Bike • Shimano 105",
+    "price": 320,
+    "location": "Berlin-Mitte",
+    "images": [
+      "https://fakeimg.pl/512x384/1b4965/ffffff?text=Road%20Bike"
+    ],
+    "isGoodValue": true,
+    "analyzedAt": "2025-12-20T11:45:00.000Z",
+    "estimation": {
+      "value": 460,
+      "reasoning": "Recent service history, upgraded drivetrain, and demand for 56cm frames in Berlin push resale value higher than list price.",
+      "confidence": 78,
+      "model": "gemini-2.5-flash",
+      "provider": "gemini",
+      "providerName": "Google Gemini",
+      "estimatedCost": {
+        "inputTokens": 520,
+        "outputTokens": 180,
+        "totalTokens": 700,
+        "cost": 0.00045,
+        "currency": "USD",
+        "formatted": "$0.000450 (estimated)",
+        "isEstimated": true
+      },
+      "isGoodValue": true
+    }
+  },
+  {
+    "id": "sample-02",
+    "url": "https://www.kleinanzeigen.de/s-anzeige/mid-century-sideboard/9876543210-88-4567",
+    "title": "Mid-Century Sideboard w/ Solid Oak",
+    "price": 550,
+    "location": "Hamburg-Altona",
+    "images": [
+      "https://fakeimg.pl/512x384/633a8d/ffffff?text=Sideboard"
+    ],
+    "isGoodValue": false,
+    "analyzedAt": "2025-12-20T12:05:00.000Z",
+    "estimation": {
+      "value": 520,
+      "reasoning": "Piece shows veneer repairs and missing shelf hardware which reduce collectable value compared to pristine comps.",
+      "confidence": 67,
+      "model": "claude-3.5-sonnet",
+      "provider": "anthropic",
+      "providerName": "Anthropic Claude",
+      "estimatedCost": {
+        "inputTokens": 610,
+        "outputTokens": 210,
+        "totalTokens": 820,
+        "cost": 0.0012,
+        "currency": "USD",
+        "formatted": "$0.001200 (estimated)",
+        "isEstimated": true
+      },
+      "isGoodValue": false
+    }
+  },
+  {
+    "id": "sample-03",
+    "url": "https://www.kleinanzeigen.de/s-anzeige/smart-home-kit/555666777-91-0001",
+    "title": "Smart Home Starter Kit (Matter Ready)",
+    "price": 180,
+    "location": "München-Schwabing",
+    "images": [
+      "https://fakeimg.pl/512x384/217346/ffffff?text=Smart%20Home"
+    ],
+    "isGoodValue": true,
+    "analyzedAt": "2025-12-20T12:25:00.000Z",
+    "estimation": {
+      "value": 230,
+      "reasoning": "Includes four sensors, hub, and recent firmware compatibility; replacement cost currently ~230 € across retailers.",
+      "confidence": 72,
+      "model": "gpt-4.1-mini",
+      "provider": "openai",
+      "providerName": "OpenAI",
+      "estimatedCost": {
+        "inputTokens": 480,
+        "outputTokens": 160,
+        "totalTokens": 640,
+        "cost": 0.0009,
+        "currency": "USD",
+        "formatted": "$0.000900 (estimated)",
+        "isEstimated": true
+      },
+      "isGoodValue": true
+    }
+  }
+]

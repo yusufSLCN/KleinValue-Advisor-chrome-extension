@@ -60,3 +60,5 @@ Thumbs.db
 # Chrome extension specific
 *.crx
 *.pem
+
+*.zip

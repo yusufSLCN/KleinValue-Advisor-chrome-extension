@@ -114,6 +114,9 @@ function createInjectAIAnalysisButton({
                 }, 2000);
 
                 injectAIEstimate(estimation);
+                if (estimation?.error && estimation.errorCode === 'gemini-quota-exceeded') {
+                    notifyQuotaLimit(estimation.retryAfterSeconds);
+                }
             } catch (error) {
                 console.error('Analysis error:', error);
                 if (error.message.includes('API key not configured')) {
@@ -172,6 +175,19 @@ function handleAnalyzerInitError(error) {
     }
 
     alert('Failed to initialize AI analyzer. Please check your API key.');
+}
+
+function notifyQuotaLimit(retryAfterSeconds) {
+    const hasRetryWindow = typeof retryAfterSeconds === 'number' && Number.isFinite(retryAfterSeconds);
+    const waitHint = hasRetryWindow
+        ? `Please wait about ${Math.ceil(retryAfterSeconds)} seconds before trying again.`
+        : 'Please wait a moment before trying again.';
+    const message = [
+        'Gemini API quota limit reached for your project.',
+        waitHint,
+        'You can review your usage limits and upgrade plans at https://ai.google.dev/gemini-api/docs/rate-limits.'
+    ].join('\n\n');
+    alert(message);
 }
 
 module.exports = {
