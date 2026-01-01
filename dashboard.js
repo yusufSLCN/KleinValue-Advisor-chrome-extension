@@ -176,13 +176,13 @@ class DashboardManager {
                 </div>
                 <div class="price-comparison">
                     <div class="listing-price">
-                        💰 Listed: €${item.price || 'N/A'}
+                        💰 Listed: ${this.formatEuroDisplay(item.price)}
                     </div>
                     <div class="estimation">
                         ${
                             item.estimation?.error
                                 ? `❌ Analysis Failed: ${item.estimation.errorMessage || 'Unknown error'}`
-                                : `🤖 AI Estimate: €${item.estimation?.value || 0}`
+                                : `🤖 AI Estimate: ${this.formatEuroDisplay(item.estimation?.value)}`
                         }
                         ${item.estimation?.reasoning && !item.estimation.error ? '<span class="reasoning-icon" title="Hover for AI reasoning">ℹ️</span>' : ''}
                         ${item.estimation?.model && !item.estimation.error ? `<small class="model-info">via ${item.estimation.model.replace('gemini-', '').replace('-latest', '')}</small>` : ''}
@@ -266,6 +266,32 @@ class DashboardManager {
             hour: '2-digit',
             minute: '2-digit'
         });
+    }
+
+    formatEuroDisplay(value) {
+        const numeric = this.normalizePriceValue(value);
+        if (numeric === null || typeof numeric !== 'number') {
+            return 'N/A';
+        }
+        return `${this.getEuroFormatter({ minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(numeric)} €`;
+    }
+
+    getEuroFormatter(options = {}) {
+        if (!this.euroFormatterCache) {
+            this.euroFormatterCache = new Map();
+        }
+        const { minimumFractionDigits = 2, maximumFractionDigits = 2 } = options;
+        const cacheKey = `${minimumFractionDigits}-${maximumFractionDigits}`;
+        if (!this.euroFormatterCache.has(cacheKey)) {
+            this.euroFormatterCache.set(
+                cacheKey,
+                new Intl.NumberFormat('de-DE', {
+                    minimumFractionDigits,
+                    maximumFractionDigits
+                })
+            );
+        }
+        return this.euroFormatterCache.get(cacheKey);
     }
 
     setupEventListeners() {

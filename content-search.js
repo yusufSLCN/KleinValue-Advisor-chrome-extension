@@ -100,22 +100,32 @@ function injectPriceIndicator(itemElement, analyzedItem) {
 
     const displayEstimate =
         typeof aiPrice === 'number' && Number.isFinite(aiPrice) ? aiPrice : null;
-    const summarizedEstimate = displayEstimate !== null ? displayEstimate.toFixed(0) : 'N/A';
-    const detailedEstimate = displayEstimate !== null ? displayEstimate.toFixed(2) : 'N/A';
+    const summarizedEstimate =
+        displayEstimate !== null
+            ? formatEuro(displayEstimate, { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+            : 'N/A';
+    const detailedEstimate =
+        displayEstimate !== null
+            ? formatEuro(displayEstimate, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+            : 'N/A';
+    const listedPriceText =
+        listedPrice > 0
+            ? formatEuro(listedPrice, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+            : null;
 
     const indicator = document.createElement('div');
     indicator.className = 'ai-price-indicator';
     indicator.classList.toggle('good-value', isGoodValue);
     indicator.innerHTML = `
         <span class="ai-price-indicator__icon">${isGoodValue ? '💎' : '🤖'}</span>
-        <span class="ai-price-indicator__label">${label}: €${summarizedEstimate}</span>
+        <span class="ai-price-indicator__label">${label}: ${summarizedEstimate}</span>
     `;
 
     const tooltip = document.createElement('div');
     tooltip.className = 'ai-price-tooltip';
     tooltip.innerHTML = `
-        <strong>AI Estimate: €${detailedEstimate}</strong><br>
-        ${listedPrice > 0 ? `Listed: €${listedPrice.toFixed(2)}<br>` : ''}
+        <strong>AI Estimate: ${detailedEstimate}</strong><br>
+        ${listedPriceText ? `Listed: ${listedPriceText}<br>` : ''}
         Confidence: ${confidence}%<br>
         ${isGoodValue ? '<span class="ai-price-tooltip__good">🎯 Marked as Good Value</span>' : ''}
     `;
@@ -139,4 +149,25 @@ function injectPriceIndicator(itemElement, analyzedItem) {
 
     priceElement.classList.add('ai-price-wrapper');
     priceElement.appendChild(indicator);
+}
+
+const euroFormatterCache = new Map();
+
+function formatEuro(amount, options = {}) {
+    if (typeof amount !== 'number' || !Number.isFinite(amount)) {
+        return 'N/A';
+    }
+    const { minimumFractionDigits = 0, maximumFractionDigits = 0 } = options;
+    const cacheKey = `${minimumFractionDigits}-${maximumFractionDigits}`;
+    if (!euroFormatterCache.has(cacheKey)) {
+        euroFormatterCache.set(
+            cacheKey,
+            new Intl.NumberFormat('de-DE', {
+                minimumFractionDigits,
+                maximumFractionDigits
+            })
+        );
+    }
+    const formatter = euroFormatterCache.get(cacheKey);
+    return `${formatter.format(amount)} €`;
 }

@@ -83,8 +83,12 @@ function attachAIEstimateToPrice(priceElement, estimation = {}) {
     const cost = estimation.estimatedCost;
     const isError = estimation.error === true;
     const hasNumericValue = typeof value === 'number' && Number.isFinite(value);
-    const summaryValue = hasNumericValue ? value.toFixed(0) : 'N/A';
-    const detailedValue = hasNumericValue ? value.toFixed(2) : 'N/A';
+    const summaryValue = hasNumericValue
+        ? formatEuro(value, { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+        : 'N/A';
+    const detailedValue = hasNumericValue
+        ? formatEuro(value, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        : 'N/A';
     const providerLabel = estimation.providerName || estimation.provider || '';
 
     const estimateContainer = document.createElement('div');
@@ -93,7 +97,7 @@ function attachAIEstimateToPrice(priceElement, estimation = {}) {
 
     const summaryText = document.createElement('div');
     summaryText.className = 'ai-estimate-summary';
-    summaryText.innerHTML = `🤖 €${summaryValue} <span class="ai-estimate-toggle">▼</span>`;
+    summaryText.innerHTML = `🤖 ${summaryValue} <span class="ai-estimate-toggle">▼</span>`;
     const toggleIcon = summaryText.querySelector('.ai-estimate-toggle');
     estimateContainer.appendChild(summaryText);
 
@@ -102,7 +106,7 @@ function attachAIEstimateToPrice(priceElement, estimation = {}) {
     detailsPanel.innerHTML = `
         <div class="ai-details-header">
             <div>
-                <strong class="ai-details-title">AI Estimate: €${detailedValue}</strong>
+                <strong class="ai-details-title">AI Estimate: ${detailedValue}</strong>
                 <div class="ai-details-subtitle">Confidence: ${confidence}%</div>
             </div>
         </div>
@@ -150,6 +154,27 @@ function injectAIEstimate(estimation) {
     }
 
     attachAIEstimateToPrice(priceElement, estimation);
+}
+
+const euroFormatterCache = new Map();
+
+function formatEuro(amount, options = {}) {
+    if (typeof amount !== 'number' || !Number.isFinite(amount)) {
+        return 'N/A';
+    }
+    const { minimumFractionDigits = 0, maximumFractionDigits = 0 } = options;
+    const cacheKey = `${minimumFractionDigits}-${maximumFractionDigits}`;
+    if (!euroFormatterCache.has(cacheKey)) {
+        euroFormatterCache.set(
+            cacheKey,
+            new Intl.NumberFormat('de-DE', {
+                minimumFractionDigits,
+                maximumFractionDigits
+            })
+        );
+    }
+    const formatter = euroFormatterCache.get(cacheKey);
+    return `${formatter.format(amount)} €`;
 }
 
 module.exports = {

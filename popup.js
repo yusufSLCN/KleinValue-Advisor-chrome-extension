@@ -63,68 +63,56 @@ function loadAnalyzedItems() {
             titleLink.target = '_blank';
             titleLink.rel = 'noopener noreferrer';
             titleLink.textContent = item.title;
+            titleLink.title = item.title;
 
             const analyzedDate = getAnalyzedDate(item);
-            const metaParts = [];
-            if (item.location && item.location !== 'Unknown') {
-                metaParts.push(`📍 ${item.location}`);
-            }
-            if (analyzedDate) {
-                metaParts.push(`Analyzed ${formatAnalyzedDate(analyzedDate)}`);
-            }
-
             const metaLine = document.createElement('div');
             metaLine.className = 'item-meta';
-            metaLine.textContent = metaParts.join('\n');
+            if (item.location && item.location !== 'Unknown') {
+                metaLine.appendChild(createMetaRow('📍', item.location));
+            }
+            if (analyzedDate) {
+                metaLine.appendChild(createMetaRow('🕒', formatAnalyzedDate(analyzedDate)));
+            }
 
             // Prices
             const pricesDiv = document.createElement('div');
             pricesDiv.className = 'item-prices';
 
-            if (item.price && item.price > 0) {
-                const realPrice = document.createElement('span');
-                realPrice.className = 'item-price-real';
-                realPrice.textContent = `Listed: €${item.price.toFixed(2)}`;
-                pricesDiv.appendChild(realPrice);
-
-                // Add separator
-                const separator = document.createElement('span');
-                separator.textContent = ' | ';
-                separator.style.color = '#6c757d';
-                separator.style.fontSize = '12px';
-                pricesDiv.appendChild(separator);
+            const listedPriceValue = normalizePrice(item.price);
+            const realPrice = document.createElement('span');
+            realPrice.className = 'item-price-real';
+            if (listedPriceValue !== null && listedPriceValue > 0) {
+                realPrice.textContent = `Listed: ${formatEuro(listedPriceValue)}`;
+            } else {
+                realPrice.textContent = 'Listed: N/A';
+                realPrice.classList.add('muted');
             }
+            pricesDiv.appendChild(realPrice);
+
+            const separator = document.createElement('span');
+            separator.className = 'item-price-separator';
+            separator.textContent = '•';
+            pricesDiv.appendChild(separator);
 
             const aiPrice = document.createElement('span');
             aiPrice.className = 'item-price-ai';
-            if (
-                item.estimation &&
-                item.estimation.value !== null &&
-                item.estimation.value !== undefined
-            ) {
-                aiPrice.textContent = `AI: €${item.estimation.value.toFixed(2)}`;
+            const aiValue = normalizePrice(item.estimation && item.estimation.value);
+            if (aiValue !== null) {
+                aiPrice.textContent = `AI: ${formatEuro(aiValue)}`;
             } else {
                 aiPrice.textContent = 'AI: N/A';
-                aiPrice.style.color = '#6c757d';
+                aiPrice.classList.add('muted');
             }
             pricesDiv.appendChild(aiPrice);
 
             // Reasoning (truncated)
-            const reasoning = document.createElement('div');
-            reasoning.className = 'item-reasoning';
-            if (item.estimation && item.estimation.reasoning) {
-                reasoning.textContent = item.estimation.reasoning;
-            } else {
-                reasoning.textContent = 'No reasoning available';
-            }
-
             // Assemble the card
             contentDiv.appendChild(titleLink);
-            if (metaLine.textContent) {
+            if (metaLine.childElementCount > 0) {
                 contentDiv.appendChild(metaLine);
             }
             contentDiv.appendChild(pricesDiv);
-            contentDiv.appendChild(reasoning);
 
             itemCard.appendChild(image);
             itemCard.appendChild(contentDiv);
@@ -164,6 +152,66 @@ function setupClearButton() {
             });
         }
     });
+}
+
+function createMetaRow(icon, text) {
+    const row = document.createElement('div');
+    row.className = 'item-meta-row';
+
+    const iconSpan = document.createElement('span');
+    iconSpan.className = 'item-meta-icon';
+    iconSpan.textContent = icon;
+
+    const textSpan = document.createElement('span');
+    textSpan.className = 'item-meta-text';
+    textSpan.textContent = text;
+
+    row.appendChild(iconSpan);
+    row.appendChild(textSpan);
+    return row;
+}
+
+function normalizePrice(rawValue) {
+    if (typeof rawValue === 'number') {
+        return Number.isFinite(rawValue) ? rawValue : null;
+    }
+    if (typeof rawValue !== 'string') {
+        return null;
+    }
+    let cleaned = rawValue.replace(/[^0-9.,-]/g, '');
+    if (!cleaned) {
+        return null;
+    }
+    const hasComma = cleaned.includes(',');
+    const hasPeriod = cleaned.includes('.');
+    if (hasComma && hasPeriod) {
+        cleaned = cleaned.replace(/\./g, '').replace(',', '.');
+    } else if (hasComma && !hasPeriod) {
+        cleaned = cleaned.replace(',', '.');
+    }
+    const parsed = parseFloat(cleaned);
+    return Number.isFinite(parsed) ? parsed : null;
+}
+
+const euroFormatterCache = new Map();
+
+function formatEuro(amount, options = {}) {
+    if (typeof amount !== 'number' || !Number.isFinite(amount)) {
+        return 'N/A';
+    }
+    const { minimumFractionDigits = 0, maximumFractionDigits = 0 } = options;
+    const cacheKey = `${minimumFractionDigits}-${maximumFractionDigits}`;
+    if (!euroFormatterCache.has(cacheKey)) {
+        euroFormatterCache.set(
+            cacheKey,
+            new Intl.NumberFormat('de-DE', {
+                minimumFractionDigits,
+                maximumFractionDigits
+            })
+        );
+    }
+    const formatter = euroFormatterCache.get(cacheKey);
+    return `${formatter.format(amount)} €`;
 }
 
 async function loadApiKeyStatus() {
