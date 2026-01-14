@@ -3,17 +3,15 @@ class DashboardManager {
         this.items = [];
         this.filteredItems = [];
         this.searchQuery = '';
-        this.statsExpanded = false;
-        this.goodValueFilter = false;
+        this.filters = this.getDefaultFilters();
         this.initialize();
     }
 
     async initialize() {
         await this.loadItems();
-        this.updateStats();
-        this.renderItems();
+        this.initializeFilterChips();
         this.setupEventListeners();
-        this.updateItemsCount();
+        this.filterItems();
     }
 
     async loadItems() {
@@ -26,51 +24,12 @@ class DashboardManager {
         });
     }
 
-    updateStats() {
-        // Filter out items with analysis errors
-        const validItems = this.items.filter((item) => !item.estimation?.error);
-
-        // Price ranges (only from valid analyses)
-        const priceRanges = this.computeDynamicPriceRanges(validItems);
-        const maxCount = Math.max(...priceRanges.map((range) => range.count), 1);
-        const priceRangesHtml = `
-            <div class="bar-chart">
-                ${priceRanges
-                    .map(({ label, count }) => {
-                        const height = maxCount > 0 ? (count / maxCount) * 100 : 0;
-                        return `<div class="bar-container">
-                        <div class="bar" style="height: ${height}%">
-                            <span class="bar-value">${count}</span>
-                        </div>
-                        <span class="bar-label">${label}</span>
-                    </div>`;
-                    })
-                    .join('')}
-            </div>
-        `;
-
-        // Good value opportunities (only from valid analyses)
-        const goodValueCount = validItems.filter((item) => this.isGoodValue(item)).length;
-
-        // Recent items (last 24h) - count all items, not just valid ones
-        const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-        const recentItems = this.items.filter(
-            (item) => new Date(item.analyzedAt || 0) > oneDayAgo
-        ).length;
-
-        const priceRangesEl = document.getElementById('price-ranges');
-        const goodValueEl = document.getElementById('good-value-count');
-        const recentEl = document.getElementById('recent-items');
-
-        if (priceRangesEl) priceRangesEl.innerHTML = priceRangesHtml;
-        if (goodValueEl) goodValueEl.textContent = goodValueCount;
-        if (recentEl) recentEl.textContent = recentItems;
-    }
-
     updateItemsCount() {
         const count = this.filteredItems.length;
         const total = this.items.length;
-        document.getElementById('items-count').textContent = this.searchQuery
+        const hasSearch = Boolean(this.searchQuery.trim());
+        const hasFilters = this.hasActiveFilters();
+        document.getElementById('items-count').textContent = hasSearch || hasFilters
             ? `${count} of ${total} items`
             : `${total} items`;
     }
@@ -81,36 +40,94 @@ class DashboardManager {
         // Apply search filter
         if (this.searchQuery.trim()) {
             const query = this.searchQuery.toLowerCase();
-            filtered = filtered.filter(
-                (item) =>
-                    item.title.toLowerCase().includes(query) ||
-                    item.location?.toLowerCase().includes(query) ||
-                    item.estimation?.reasoning?.toLowerCase().includes(query)
-            );
+            filtered = filtered.filter((item) => {
+                const matchesTitle = item.title?.toLowerCase().includes(query);
+                const matchesLocation = item.location?.toLowerCase().includes(query);
+                const matchesReasoning = item.estimation?.reasoning?.toLowerCase().includes(query);
+                return Boolean(matchesTitle || matchesLocation || matchesReasoning);
+            });
         }
 
-        // Apply good value filter
-        if (this.goodValueFilter) {
+        const priceMin = this.parseNumberInput(this.filters.price.min);
+        const priceMax = this.parseNumberInput(this.filters.price.max);
+        if (priceMin !== null || priceMax !== null) {
+            filtered = filtered.filter((item) => {
+                const priceValue = this.normalizePriceValue(item.price);
+                if (priceValue === null) {
+                    return false;
+                }
+                if (priceMin !== null && priceValue < priceMin) {
+                    return false;
+                }
+                if (priceMax !== null && priceValue > priceMax) {
+                    return false;
+                }
+                return true;
+            });
+        }
+
+        const valueMin = this.parseNumberInput(this.filters.value.min);
+        const valueMax = this.parseNumberInput(this.filters.value.max);
+        if (valueMin !== null || valueMax !== null) {
+            filtered = filtered.filter((item) => {
+                const raw = item.estimation?.value;
+                const aiValue = typeof raw === 'number' ? raw : this.normalizePriceValue(raw);
+                if (!Number.isFinite(aiValue)) {
+                    return false;
+                }
+                if (valueMin !== null && aiValue < valueMin) {
+                    return false;
+                }
+                if (valueMax !== null && aiValue > valueMax) {
+                    return false;
+                }
+                return true;
+            });
+        }
+
+        if (this.filters.goodValueOnly) {
             filtered = filtered.filter((item) => this.isGoodValue(item));
+        }
+
+        const addedFrom = this.parseDateInput(this.filters.added.from);
+        const addedTo = this.parseDateInput(this.filters.added.to, { endOfDay: true });
+        if (addedFrom !== null || addedTo !== null) {
+            filtered = filtered.filter((item) => {
+                const analyzedTimestamp = this.getDateTimestamp(item.analyzedAt || item.analyzed_at);
+                if (analyzedTimestamp === null) {
+                    return false;
+                }
+                if (addedFrom !== null && analyzedTimestamp < addedFrom) {
+                    return false;
+                }
+                if (addedTo !== null && analyzedTimestamp > addedTo) {
+                    return false;
+                }
+                return true;
+            });
+        }
+
+        const listingFrom = this.parseDateInput(this.filters.listed.from);
+        const listingTo = this.parseDateInput(this.filters.listed.to, { endOfDay: true });
+        if (listingFrom !== null || listingTo !== null) {
+            filtered = filtered.filter((item) => {
+                const listingTimestamp = this.getListingDateTimestamp(item);
+                if (listingTimestamp === null) {
+                    return false;
+                }
+                if (listingFrom !== null && listingTimestamp < listingFrom) {
+                    return false;
+                }
+                if (listingTo !== null && listingTimestamp > listingTo) {
+                    return false;
+                }
+                return true;
+            });
         }
 
         this.filteredItems = filtered;
         this.updateItemsCount();
         this.renderItems();
-    }
-
-    toggleStats() {
-        this.statsExpanded = !this.statsExpanded;
-        const statsSection = document.getElementById('stats-section');
-        const toggleButton = document.getElementById('stats-toggle');
-
-        if (this.statsExpanded) {
-            statsSection.classList.add('expanded');
-            toggleButton.textContent = '📊 Hide Statistics';
-        } else {
-            statsSection.classList.remove('expanded');
-            toggleButton.textContent = '📊 Show Statistics';
-        }
     }
 
     renderItems() {
@@ -137,9 +154,11 @@ class DashboardManager {
         }
 
         // Sort by analysis date (newest first)
-        const sortedItems = [...this.filteredItems].sort(
-            (a, b) => new Date(b.analyzedAt || 0) - new Date(a.analyzedAt || 0)
-        );
+        const sortedItems = [...this.filteredItems].sort((a, b) => {
+            const tsB = this.getDateTimestamp(b.analyzedAt || b.analyzed_at);
+            const tsA = this.getDateTimestamp(a.analyzedAt || a.analyzed_at);
+            return (tsB || 0) - (tsA || 0);
+        });
 
         sortedItems.forEach((item) => {
             const itemElement = this.createItemElement(item);
@@ -171,7 +190,7 @@ class DashboardManager {
                     </div>
                     <div class="item-date">
                         <span>🕒</span>
-                        <span>${this.formatDate(item.analyzedAt)}</span>
+                        <span>${this.formatDate(item.analyzedAt || item.analyzed_at)}</span>
                     </div>
                 </div>
                 <div class="price-comparison">
@@ -246,8 +265,14 @@ class DashboardManager {
         if (typeof item.isGoodValue === 'boolean') {
             return item.isGoodValue;
         }
-        const listingPrice = typeof item.price === 'number' ? item.price : 0;
-        const estimate = typeof item.estimation?.value === 'number' ? item.estimation.value : 0;
+        const listingPriceValue =
+            typeof item.price === 'number' ? item.price : this.normalizePriceValue(item.price);
+        const listingPrice = Number.isFinite(listingPriceValue) ? listingPriceValue : 0;
+        const estimateValue =
+            typeof item.estimation?.value === 'number'
+                ? item.estimation.value
+                : this.normalizePriceValue(item.estimation?.value);
+        const estimate = Number.isFinite(estimateValue) ? estimateValue : 0;
         return listingPrice > 0 && estimate > listingPrice;
     }
 
@@ -297,32 +322,98 @@ class DashboardManager {
     setupEventListeners() {
         // Search functionality
         const searchInput = document.getElementById('search-input');
-        searchInput.addEventListener('input', (e) => {
-            this.searchQuery = e.target.value;
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                this.searchQuery = e.target.value;
+                this.filterItems();
+            });
+        }
+
+        const filterSelect = document.getElementById('filter-add-select');
+        if (filterSelect) {
+            filterSelect.addEventListener('change', (e) => {
+                const filterKey = e.target.value;
+                if (!filterKey) {
+                    return;
+                }
+                this.activateFilter(filterKey);
+                e.target.value = '';
+            });
+        }
+
+        document.querySelectorAll('.chip-remove').forEach((button) => {
+            button.addEventListener('click', () => {
+                const filterKey = button.dataset.filterRemove;
+                if (filterKey) {
+                    this.deactivateFilter(filterKey);
+                }
+            });
+        });
+
+        const bindInput = (id, handler, eventName = 'input') => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.addEventListener(eventName, handler);
+            }
+        };
+
+        bindInput('price-min', (e) => {
+            this.filters.price.min = e.target.value;
             this.filterItems();
         });
 
-        // Stats toggle
-        const statsToggle = document.getElementById('stats-toggle');
-        statsToggle.addEventListener('click', () => {
-            this.toggleStats();
+        bindInput('price-max', (e) => {
+            this.filters.price.max = e.target.value;
+            this.filterItems();
         });
 
-        // Good value filter
-        const goodValueCard = document.getElementById('good-value-card');
-        if (goodValueCard) {
-            goodValueCard.addEventListener('click', () => {
-                this.goodValueFilter = !this.goodValueFilter;
-                goodValueCard.classList.toggle('active', this.goodValueFilter);
+        bindInput('value-min', (e) => {
+            this.filters.value.min = e.target.value;
+            this.filterItems();
+        });
+
+        bindInput('value-max', (e) => {
+            this.filters.value.max = e.target.value;
+            this.filterItems();
+        });
+
+        bindInput('added-after', (e) => {
+            this.filters.added.from = e.target.value;
+            this.filterItems();
+        }, 'change');
+
+        bindInput('added-before', (e) => {
+            this.filters.added.to = e.target.value;
+            this.filterItems();
+        }, 'change');
+
+        bindInput('listing-after', (e) => {
+            this.filters.listed.from = e.target.value;
+            this.filterItems();
+        }, 'change');
+
+        bindInput('listing-before', (e) => {
+            this.filters.listed.to = e.target.value;
+            this.filterItems();
+        }, 'change');
+
+        const goodValueToggle = document.getElementById('good-value-only');
+        if (goodValueToggle) {
+            goodValueToggle.addEventListener('change', (e) => {
+                this.filters.goodValueOnly = e.target.checked;
                 this.filterItems();
             });
+        }
+
+        const clearFiltersBtn = document.getElementById('clear-filters');
+        if (clearFiltersBtn) {
+            clearFiltersBtn.addEventListener('click', () => this.resetFilters());
         }
 
         // Listen for storage changes to update dashboard
         chrome.storage.onChanged.addListener((changes) => {
             if (changes.analyzedItems) {
                 this.loadItems().then(() => {
-                    this.updateStats();
                     this.filterItems();
                 });
             }
@@ -345,59 +436,172 @@ class DashboardManager {
                 });
 
                 // Update UI
-                this.updateStats();
                 this.filterItems();
             }
         }
     }
 
-    computeDynamicPriceRanges(validItems) {
-        const priceValues = validItems
-            .map((item) => this.normalizePriceValue(item.price))
-            .filter((value) => Number.isFinite(value) && value >= 0);
+    getDefaultFilters() {
+        return {
+            price: { min: '', max: '' },
+            value: { min: '', max: '' },
+            added: { from: '', to: '' },
+            listed: { from: '', to: '' },
+            goodValueOnly: false
+        };
+    }
 
-        if (priceValues.length === 0) {
-            return [
-                { label: '€0-10', count: 0 },
-                { label: '€10-50', count: 0 },
-                { label: '€50-100', count: 0 },
-                { label: '€100+', count: 0 }
-            ];
+    initializeFilterChips() {
+        ['price', 'value', 'goodValue', 'added', 'listing'].forEach((filterKey) => {
+            this.setFilterChipActive(filterKey, false);
+        });
+    }
+
+    activateFilter(filterKey) {
+        const isAlreadyActive = this.isFilterChipActive(filterKey);
+        if (isAlreadyActive) {
+            return;
         }
 
-        const bucketCount = 4;
-        priceValues.sort((a, b) => a - b);
-
-        const boundaries = [];
-        for (let i = 0; i <= bucketCount; i++) {
-            boundaries.push(this.getQuantileValue(priceValues, i / bucketCount));
-        }
-
-        for (let i = 1; i < boundaries.length; i++) {
-            if (boundaries[i] < boundaries[i - 1]) {
-                boundaries[i] = boundaries[i - 1];
+        this.setFilterChipActive(filterKey, true);
+        if (filterKey === 'goodValue') {
+            const goodValueToggle = document.getElementById('good-value-only');
+            if (goodValueToggle) {
+                goodValueToggle.checked = true;
             }
+            this.filters.goodValueOnly = true;
+        }
+        this.filterItems();
+    }
+
+    deactivateFilter(filterKey) {
+        this.setFilterChipActive(filterKey, false);
+        this.filterItems();
+    }
+
+    isFilterChipActive(filterKey) {
+        const chip = this.getFilterChip(filterKey);
+        return Boolean(chip && chip.classList.contains('active'));
+    }
+
+    setFilterChipActive(filterKey, isActive) {
+        const chip = this.getFilterChip(filterKey);
+        if (!chip) {
+            return;
         }
 
-        const counts = new Array(bucketCount).fill(0);
-        priceValues.forEach((price) => {
-            for (let i = 0; i < bucketCount; i++) {
-                const upper = boundaries[i + 1];
-                if (i === bucketCount - 1 || price < upper || upper === boundaries[i]) {
-                    counts[i]++;
-                    break;
+        chip.classList.toggle('active', isActive);
+        chip.setAttribute('aria-hidden', String(!isActive));
+
+        chip.querySelectorAll('input').forEach((input) => {
+            input.disabled = !isActive;
+            if (!isActive) {
+                if (input.type === 'checkbox') {
+                    input.checked = false;
+                } else {
+                    input.value = '';
                 }
             }
         });
 
-        return counts.map((count, index) => ({
-            label: this.buildRangeLabel(
-                boundaries[index],
-                boundaries[index + 1],
-                index === bucketCount - 1
-            ),
-            count
-        }));
+        if (!isActive) {
+            this.clearFilterState(filterKey);
+        }
+    }
+
+    clearFilterState(filterKey) {
+        switch (filterKey) {
+            case 'price':
+                this.filters.price.min = '';
+                this.filters.price.max = '';
+                break;
+            case 'value':
+                this.filters.value.min = '';
+                this.filters.value.max = '';
+                break;
+            case 'added':
+                this.filters.added.from = '';
+                this.filters.added.to = '';
+                break;
+            case 'listing':
+                this.filters.listed.from = '';
+                this.filters.listed.to = '';
+                break;
+            case 'goodValue':
+                this.filters.goodValueOnly = false;
+                break;
+            default:
+                break;
+        }
+    }
+
+    getFilterChip(filterKey) {
+        return document.querySelector(`.filter-chip[data-filter="${filterKey}"]`);
+    }
+
+    resetFilters() {
+        this.filters = this.getDefaultFilters();
+        ['price', 'value', 'goodValue', 'added', 'listing'].forEach((filterKey) => {
+            this.setFilterChipActive(filterKey, false);
+        });
+        this.filterItems();
+    }
+
+    hasActiveFilters() {
+        const { price, value, added, listed, goodValueOnly } = this.filters;
+        return (
+            goodValueOnly ||
+            price.min !== '' ||
+            price.max !== '' ||
+            value.min !== '' ||
+            value.max !== '' ||
+            added.from !== '' ||
+            added.to !== '' ||
+            listed.from !== '' ||
+            listed.to !== ''
+        );
+    }
+
+    parseNumberInput(value) {
+        if (value === '' || value === null || value === undefined) {
+            return null;
+        }
+        const numeric = Number(value);
+        return Number.isFinite(numeric) ? numeric : null;
+    }
+
+    parseDateInput(value, { endOfDay = false } = {}) {
+        if (!value) {
+            return null;
+        }
+        const date = new Date(`${value}T00:00:00`);
+        if (Number.isNaN(date.getTime())) {
+            return null;
+        }
+        if (endOfDay) {
+            date.setHours(23, 59, 59, 999);
+        }
+        return date.getTime();
+    }
+
+    getDateTimestamp(rawValue) {
+        if (!rawValue) {
+            return null;
+        }
+        const date = new Date(rawValue);
+        const timestamp = date.getTime();
+        return Number.isNaN(timestamp) ? null : timestamp;
+    }
+
+    getListingDateTimestamp(item) {
+        const candidate =
+            item.listingDate ||
+            item.listing_date ||
+            item.listedAt ||
+            item.posting_time ||
+            item.postingTime ||
+            item.metadata?.listingDate;
+        return this.getDateTimestamp(candidate);
     }
 
     normalizePriceValue(price) {
@@ -441,43 +645,6 @@ class DashboardManager {
         }
 
         return null;
-    }
-
-    getQuantileValue(sortedValues, quantile) {
-        if (!sortedValues.length) {
-            return 0;
-        }
-
-        const position = (sortedValues.length - 1) * quantile;
-        const base = Math.floor(position);
-        const rest = position - base;
-        const lower = sortedValues[base];
-        const upper = sortedValues[base + 1];
-
-        if (upper !== undefined) {
-            return lower + rest * (upper - lower);
-        }
-
-        return lower;
-    }
-
-    buildRangeLabel(start, end, isLastRange) {
-        const startLabel = this.formatRangeValue(start);
-        if (isLastRange) {
-            return `${startLabel}+`;
-        }
-
-        const endLabel = this.formatRangeValue(end);
-        return startLabel === endLabel ? startLabel : `${startLabel}–${endLabel}`;
-    }
-
-    formatRangeValue(value) {
-        if (!Number.isFinite(value)) {
-            return '€0';
-        }
-
-        const roundedValue = value >= 100 ? Math.round(value / 10) * 10 : Math.round(value);
-        return `€${roundedValue.toLocaleString('de-DE')}`;
     }
 }
 

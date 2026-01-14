@@ -18,7 +18,6 @@ function cacheElements() {
         apiKeyInput: document.getElementById('api-key'),
         apiHelper: document.getElementById('api-helper'),
         modelSelect: document.getElementById('model-select'),
-        refreshButton: document.getElementById('refresh-models'),
         maxImagesInput: document.getElementById('max-images'),
         maxImagesField: document.getElementById('max-images-field'),
         temperatureInput: document.getElementById('temperature'),
@@ -39,8 +38,10 @@ function createInitialState() {
         randomSeed: 1337,
         enableImages: true,
         autoSaveTimer: null,
+        modelRefreshTimer: null,
         isHydrating: true,
-        lastAutoSaveNotice: 0
+        lastAutoSaveNotice: 0,
+        lastFetchedApiKeys: {}
     };
 }
 
@@ -70,12 +71,15 @@ function bindEvents(elements, state) {
     });
 
     elements.apiKeyInput.addEventListener('input', () => {
-        state.providerApiKeys[state.selectedProvider] = elements.apiKeyInput.value.trim();
+        const trimmedKey = elements.apiKeyInput.value.trim();
+        state.providerApiKeys[state.selectedProvider] = trimmedKey;
+        if (!trimmedKey) {
+            delete state.lastFetchedApiKeys[state.selectedProvider];
+            clearModelRefreshTimer(state);
+        } else {
+            scheduleModelAutoRefresh(state, elements);
+        }
         maybeScheduleAutoSave(state, elements);
-    });
-
-    elements.refreshButton.addEventListener('click', async () => {
-        await withBusyButton(elements.refreshButton, () => refreshModels(state, elements, false));
     });
 
     elements.testButton.addEventListener('click', async () => {
@@ -229,27 +233,32 @@ function populateModelSelect(elements, state) {
     state.providerModelSelections[state.selectedProvider] = elements.modelSelect.value;
 }
 
-async function refreshModels(state, elements, silent) {
-    const provider = getProviderMeta(state.selectedProvider);
-    const apiKey = (state.providerApiKeys[state.selectedProvider] || '').trim();
+async function refreshModels(state, elements, silent, providerIdOverride = null) {
+    const providerId = providerIdOverride || state.selectedProvider;
+    const provider = getProviderMeta(providerId);
+    const apiKey = (state.providerApiKeys[providerId] || '').trim();
     if (!apiKey) {
-        showStatus(elements.status, `Enter your ${provider.shortName} API key first.`, 'error');
+        if (!silent && providerId === state.selectedProvider) {
+            showStatus(elements.status, `Enter your ${provider.shortName} API key first.`, 'error');
+        }
         return null;
     }
 
-    if (!silent) {
+    if (!silent && providerId === state.selectedProvider) {
         showStatus(elements.status, `Fetching ${provider.shortName} models...`, 'info');
     }
 
     try {
         const models = await provider.fetchModels(apiKey);
-        state.providerModels[state.selectedProvider] = models;
+        state.providerModels[providerId] = models;
         chrome.storage.local.set({
             modelCatalog: state.providerModels,
             modelCatalogUpdatedAt: Date.now()
         });
-        populateModelSelect(elements, state);
-        if (!silent) {
+        if (providerId === state.selectedProvider) {
+            populateModelSelect(elements, state);
+        }
+        if (!silent && providerId === state.selectedProvider) {
             showStatus(
                 elements.status,
                 `Loaded ${models.length} models from ${provider.shortName}`,
@@ -258,7 +267,11 @@ async function refreshModels(state, elements, silent) {
         }
         return models;
     } catch (error) {
-        showStatus(elements.status, error.message || 'Failed to fetch models', 'error');
+        if (providerId === state.selectedProvider) {
+            showStatus(elements.status, error.message || 'Failed to fetch models', 'error');
+        } else {
+            console.warn(`Failed to fetch models for ${provider.shortName}:`, error);
+        }
         return null;
     }
 }
@@ -341,6 +354,47 @@ function maybeScheduleAutoSave(state, elements) {
         return;
     }
     scheduleAutoSave(state, elements);
+}
+
+function scheduleModelAutoRefresh(state, elements) {
+    if (state.isHydrating) {
+        return;
+    }
+
+    const providerId = state.selectedProvider;
+    const apiKey = (state.providerApiKeys[providerId] || '').trim();
+    if (!apiKey) {
+        return;
+    }
+
+    clearModelRefreshTimer(state);
+
+    state.modelRefreshTimer = setTimeout(() => {
+        state.modelRefreshTimer = null;
+        autoRefreshModelsForProvider(providerId, apiKey, state, elements);
+    }, AUTO_SAVE_DEBOUNCE_MS);
+}
+
+function clearModelRefreshTimer(state) {
+    if (state.modelRefreshTimer) {
+        clearTimeout(state.modelRefreshTimer);
+        state.modelRefreshTimer = null;
+    }
+}
+
+async function autoRefreshModelsForProvider(providerId, apiKey, state, elements) {
+    if (state.lastFetchedApiKeys[providerId] === apiKey) {
+        return;
+    }
+
+    try {
+        const models = await refreshModels(state, elements, false, providerId);
+        if (models) {
+            state.lastFetchedApiKeys[providerId] = apiKey;
+        }
+    } catch (error) {
+        console.warn(`Auto refresh failed for ${providerId}:`, error);
+    }
 }
 
 function indicateAutoSaved(state, elements) {

@@ -25,22 +25,66 @@
                 </div>
             </div>
 
-            <button class="stats-toggle" id="stats-toggle">📊 Show Statistics</button>
+            <div class="filters-section">
+                <div class="filter-bar">
+                    <div class="filter-add">
+                        <label for="filter-add-select">Filters</label>
+                        <select id="filter-add-select">
+                            <option value="">Add filter…</option>
+                            <option value="price">Price (€)</option>
+                            <option value="value">AI Value (€)</option>
+                            <option value="goodValue">Good Value</option>
+                            <option value="added">Date Added</option>
+                            <option value="listing">Listing Date</option>
+                        </select>
+                    </div>
 
-            <div class="stats-section" id="stats-section">
-                <div class="stats" id="stats">
-                    <div class="stat-card">
-                        <h3>Price Ranges</h3>
-                        <div class="value" id="price-ranges">Loading...</div>
+                    <div class="active-filters" id="active-filters">
+                        <div class="filter-chip" data-filter="price" aria-hidden="true">
+                            <span class="chip-label">Price (€)</span>
+                            <input type="number" id="price-min" placeholder="Min" min="0" />
+                            <span class="range-divider">to</span>
+                            <input type="number" id="price-max" placeholder="Max" min="0" />
+                            <button type="button" class="chip-remove" data-filter-remove="price">×</button>
+                        </div>
+
+                        <div class="filter-chip" data-filter="value" aria-hidden="true">
+                            <span class="chip-label">AI Value (€)</span>
+                            <input type="number" id="value-min" placeholder="Min" min="0" />
+                            <span class="range-divider">to</span>
+                            <input type="number" id="value-max" placeholder="Max" min="0" />
+                            <button type="button" class="chip-remove" data-filter-remove="value">×</button>
+                        </div>
+
+                        <div class="filter-chip" data-filter="goodValue" aria-hidden="true">
+                            <span class="chip-label">Good Value</span>
+                            <label class="chip-toggle">
+                                <input type="checkbox" id="good-value-only" />
+                                <span>Only show listings priced below AI value</span>
+                            </label>
+                            <button type="button" class="chip-remove" data-filter-remove="goodValue">×</button>
+                        </div>
+
+                        <div class="filter-chip" data-filter="added" aria-hidden="true">
+                            <span class="chip-label">Date Added</span>
+                            <input type="date" id="added-after" />
+                            <span class="range-divider">to</span>
+                            <input type="date" id="added-before" />
+                            <button type="button" class="chip-remove" data-filter-remove="added">×</button>
+                        </div>
+
+                        <div class="filter-chip" data-filter="listing" aria-hidden="true">
+                            <span class="chip-label">Listing Date</span>
+                            <input type="date" id="listing-after" />
+                            <span class="range-divider">to</span>
+                            <input type="date" id="listing-before" />
+                            <button type="button" class="chip-remove" data-filter-remove="listing">×</button>
+                        </div>
                     </div>
-                    <div class="stat-card" id="good-value-card" style="cursor: pointer">
-                        <h3>Good Value Items</h3>
-                        <div class="value" id="good-value-count">0</div>
-                    </div>
-                    <div class="stat-card">
-                        <h3>Recent (24h)</h3>
-                        <div class="value" id="recent-items">0</div>
-                    </div>
+
+                    <button type="button" id="clear-filters" class="filter-reset">
+                        Reset Filters
+                    </button>
                 </div>
             </div>
 
