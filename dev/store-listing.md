@@ -16,14 +16,14 @@ KleinValue Advisor adds an "Analyze with AI" workflow to every Kleinanzeigen lis
 - **Multi-provider studio:** Switch between Gemini, GPT-4o/4.1, and Claude 3.5 in one place, with per-provider API key storage and model catalogs.
 - **Inline UI on Kleinanzeigen:** Adds a floating price badge beside the seller's number, including collapsible reasoning, confidence, and API cost.
 - **Realtime bargain radar:** Highlights listings you've already analyzed directly inside Kleinanzeigen search results.
-- **Analytics dashboard:** Review every analyzed item in a responsive grid with filters, price histograms, and “good value” toggles.
+- **Analytics dashboard:** Browse a responsive grid with natural-language search, chip-based filters (price, AI value, good-value, date), inline reasoning tooltips, and quick open/remove actions.
 - **Cost transparency:** Surface estimated token counts and EUR-formatted pricing so you always know what each call costs.
 - **Privacy-respecting:** All data stays in Chrome storage on your device; nothing is uploaded to third-party servers beyond the AI providers you enable.
 
 ### What you get
 1. **Analyze button** on each listing that fetches images, builds prompts, and sends them to your selected provider.
 2. **Popup recap** with the last analyzed items, quick links to dashboard/settings, and API key status.
-3. **Dashboard view** for browsing history, filtering by good value, searching by text/location, and removing stale entries.
+3. **Dashboard view** for browsing history with natural-language search, chip filters spanning price/value/dates, inline reasoning reveals, and one-click open/remove controls.
 4. **Settings lab** with API key management, image limits, temperature controls, and auto-analyze toggles.
 
 ### Permissions explained
