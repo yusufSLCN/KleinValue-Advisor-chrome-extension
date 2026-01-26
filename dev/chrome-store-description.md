@@ -4,7 +4,7 @@ KleinValue Advisor adds an "Analyze with AI" workflow to every Kleinanzeigen lis
 
 WHY INSTALL KLEINVALUE ADVISOR?
 - Vision-first valuations: Uploads listing images plus description context to multimodal LLMs for richer price guidance.
-- Multi-provider studio: Switch between Gemini, GPT-4o/4.1, and Claude 3.5 in one place, with per-provider API key storage and model catalogs.
+- Multi-provider studio: Switch between Gemini, ChatGPT, and Claude in one place, with per-provider API key storage and model catalogs.
 - Inline UI on Kleinanzeigen: Adds a floating price badge beside the seller's number, including collapsible reasoning, confidence, and API cost.
 - Realtime bargain radar: Highlights listings you've already analyzed directly inside Kleinanzeigen search results.
 - Analytics dashboard: Browse a responsive grid with natural-language search, chip-based filters (price, AI value, good-value, date), inline reasoning tooltips, and quick open/remove actions.

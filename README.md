@@ -1,6 +1,6 @@
 # KleinValue Advisor
 
-AI-powered Chrome extension for analyzing Kleinanzeigen listings with Google Gemini, OpenAI GPT-4o/4.1, and Anthropic Claude. The extension injects a valuation UI directly into listings, augments search results, and ships with a modern dashboard plus settings surface for multi-provider management.
+AI-powered Chrome extension for analyzing Kleinanzeigen listings with Google Gemini, OpenAI GPT, and Anthropic Claude. The extension injects a valuation UI directly into listings, augments search results, and ships with a modern dashboard plus settings surface for multi-provider management.
 
 > **Status:** Actively iterated. Automated tests are scheduled for a future milestone; build tooling is ready today.
 
@@ -10,12 +10,10 @@ AI-powered Chrome extension for analyzing Kleinanzeigen listings with Google Gem
 2. [Screens & Modules](#screens--modules)
 3. [Getting Started](#getting-started)
 4. [Configuration](#configuration)
-5. [Available Scripts](#available-scripts)
-6. [Structure & Assets](#structure--assets)
-7. [Tech Stack](#tech-stack)
-8. [Roadmap](#roadmap)
-9. [Contributing](#contributing)
-10. [License](#license)
+	1. [Code Layout](#code-layout)
+5. [Tech Stack](#tech-stack)
+6. [Contributing](#contributing)
+7. [License](#license)
 
 ## Highlights
 
@@ -29,7 +27,7 @@ AI-powered Chrome extension for analyzing Kleinanzeigen listings with Google Gem
 
 | Surface               | Description                                                                                                      |
 | --------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| **Listing injection** | Adds an "🤖 Analyze with AI" entry point, displays the latest valuation, and shows cost & reasoning on demand.   |
+| **Listing injection** | Adds an "Analyze with AI" entry point, displays the latest valuation, and shows cost & reasoning on demand.   |
 | **Search assist**     | Annotates Kleinanzeigen search results for items already analyzed (with bargain highlighting).                   |
 | **Dashboard**         | Grid of analyzed items with natural-language search, chip-based filters (price, AI value, good-value, date), inline reasoning tooltips, and live remove/open actions. |
 | **Settings**          | Gradient-rich provider studio with API key entry, live model refresh, analysis controls, and automation toggles. |
@@ -46,22 +44,11 @@ npm run build
 
 Load the generated bundle at `chrome://extensions` using **Load unpacked** (ensure Developer Mode is enabled).
 
+Prefer installing directly? Grab the published build from the [Chrome Web Store listing](https://chromewebstore.google.com/detail/kleinvalue-advisor/jmkbagkfpppkfllhmogggmobfalfikmj).
+
 ## Configuration
 
 All provider keys are entered and stored inside the extension settings UI. There is no `.env` file to maintain because the extension never reads environment variables at runtime; keep secrets in your browser profile or a secrets manager for CI packaging.
-
-## Available Scripts
-
-| Command                | Description                                         |
-| ---------------------- | --------------------------------------------------- |
-| `npm run dev`          | Development build with watch mode.                  |
-| `npm run build`        | Production bundle used for packaging the extension. |
-| `npm run format`       | Prettier auto-format for JS/HTML/CSS/JSON/Markdown. |
-| `npm run format:check` | Prettier in read-only mode for CI.                  |
-
-Automated tests will arrive in a future release (`npm test` is intentionally omitted for now).
-
-## Structure & Assets
 
 ### Code Layout
 
@@ -119,7 +106,3 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for local setup, coding standards, and co
 ## License
 
 This project is distributed under the [MIT License](LICENSE).
-
----
-
-**Made with ❤️ for Kleinanzeigen buyers who want data-driven decisions.**
