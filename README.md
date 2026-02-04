@@ -2,8 +2,6 @@
 
 AI-powered Chrome extension for analyzing Kleinanzeigen listings with Google Gemini, OpenAI GPT, and Anthropic Claude. The extension injects a valuation UI directly into listings, augments search results, and ships with a modern dashboard plus settings surface for multi-provider management.
 
-> **Status:** Actively iterated. Automated tests are scheduled for a future milestone; build tooling is ready today.
-
 ## Table of Contents
 
 1. [Highlights](#highlights)
@@ -91,7 +89,7 @@ All provider keys are entered and stored inside the extension settings UI. There
 - **Build:** Webpack 5 + Babel.
 - **Language:** Modern JavaScript (ES2021) bundled for Manifest V3.
 - **Styling:** Plain CSS with intentional gradients and responsive layouts.
-- **AI Providers:** Google Gemini (`@google/genai`), OpenAI REST API, Anthropic REST API.
+- **AI Providers:** Google Gemini, OpenAI REST API, Anthropic REST API.
 - **Storage:** Chrome `storage.local` abstractions via `lib/storage-manager`.
 
 
