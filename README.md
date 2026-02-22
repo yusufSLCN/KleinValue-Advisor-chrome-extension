@@ -1,6 +1,6 @@
 # KleinValue Advisor
 
-AI-powered Chrome extension for analyzing Kleinanzeigen listings with Google Gemini, OpenAI GPT, and Anthropic Claude. The extension injects a valuation UI directly into listings, augments search results, and ships with a modern dashboard plus settings surface for multi-provider management.
+AI-powered Chrome extension for analyzing Kleinanzeigen listings with Google Gemini, OpenAI GPT, Anthropic Claude, and Puter.js. The extension injects a valuation UI directly into listings, augments search results, and ships with a modern dashboard plus settings surface for multi-provider management.
 
 ## Table of Contents
 
@@ -15,7 +15,7 @@ AI-powered Chrome extension for analyzing Kleinanzeigen listings with Google Gem
 
 ## Highlights
 
-- **Multi-provider AI studio:** Hot-swap between Gemini, GPT-4o/4.1, and Claude 3.5 with dedicated key/model storage and live catalog fetching.
+- **Multi-provider AI studio:** Hot-swap between Gemini, GPT-4o/4.1, Claude, and Puter.js with dedicated provider configuration and live catalog fetching.
 - **Vision-first valuations:** Pulls listing images, runs multimodal prompts, and surfaces structured price, confidence, and reasoning.
 - **Search & dashboard integration:** Shows cached AI estimates inline on Kleinanzeigen search results and in an analytics dashboard with filters and stats.
 - **Cost & transparency:** Displays provider costs, token usage, and confidence for every run so users know when to trust or renegotiate.
@@ -66,7 +66,7 @@ All provider keys are entered and stored inside the extension settings UI. There
 │   │   ├── metadata.js
 │   │   └── registry.js
 │   ├── storage-manager.js
-│   └── {anthropic,gemini,openai}-estimator.js
+│   └── {anthropic,gemini,openai,puter}-estimator.js
 ├── popup.(html|css|js)
 ├── settings.(html|css|js)
 ├── dev/
@@ -89,7 +89,7 @@ All provider keys are entered and stored inside the extension settings UI. There
 - **Build:** Webpack 5 + Babel.
 - **Language:** Modern JavaScript (ES2021) bundled for Manifest V3.
 - **Styling:** Plain CSS with intentional gradients and responsive layouts.
-- **AI Providers:** Google Gemini, OpenAI REST API, Anthropic REST API.
+- **AI Providers:** Google Gemini (`@google/genai`), OpenAI REST API, Anthropic REST API, Puter.js (`@heyputer/puter.js`).
 - **Storage:** Chrome `storage.local` abstractions via `lib/storage-manager`.
 
 

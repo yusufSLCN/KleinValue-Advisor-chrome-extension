@@ -40,16 +40,7 @@ module.exports = {
         extensions: ['.js']
     },
     optimization: {
-        splitChunks: {
-            chunks: 'all',
-            cacheGroups: {
-                vendor: {
-                    test: /[\\/]node_modules[\\/]/,
-                    name: 'vendor',
-                    chunks: 'all'
-                }
-            }
-        }
+        splitChunks: false
     },
     plugins: [
         new CopyPlugin({

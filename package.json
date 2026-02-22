@@ -1,7 +1,7 @@
 {
     "name": "kleinvalue-advisor",
     "version": "0.9.0",
-    "description": "AI-powered Chrome extension for valuing Kleinanzeigen listings with Gemini, GPT-4o, and Claude.",
+    "description": "AI-powered Chrome extension for valuing Kleinanzeigen listings with Gemini, GPT-4o, Claude, and Puter.js.",
     "main": "content.js",
     "scripts": {
         "build": "webpack --mode=production",
@@ -36,6 +36,7 @@
     "type": "commonjs",
     "dependencies": {
         "@babel/runtime": "^7.28.4",
-        "@google/genai": "^1.20.0"
+        "@google/genai": "^1.20.0",
+        "@heyputer/puter.js": "^2.2.10"
     }
 }

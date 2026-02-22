@@ -30,6 +30,7 @@ async function initializeAnalyzer() {
         if (
             error.code === 'missing-api-key' ||
             error.code === 'extension-invalidated' ||
+            error.message?.includes('API key not configured') ||
             error.message?.includes('Extension context invalidated')
         ) {
             return;
@@ -42,23 +43,6 @@ async function initializeAnalyzer() {
 async function ensureAnalyzerReady() {
     if (analyzer) {
         return analyzer;
-    }
-
-    let apiKey;
-    try {
-        apiKey = await window.StorageManager.getApiKey();
-    } catch (error) {
-        const err = new Error(error.message || 'Failed to read API key from extension storage.');
-        err.code = error.message?.includes('Extension context invalidated')
-            ? 'extension-invalidated'
-            : 'storage-error';
-        throw err;
-    }
-
-    if (!apiKey) {
-        const err = new Error('API key not configured');
-        err.code = 'missing-api-key';
-        throw err;
     }
 
     try {

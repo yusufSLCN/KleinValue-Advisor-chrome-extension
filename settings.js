@@ -71,6 +71,10 @@ function bindEvents(elements, state) {
     });
 
     elements.apiKeyInput.addEventListener('input', () => {
+        const provider = getProviderMeta(state.selectedProvider);
+        if (!providerRequiresApiKey(provider)) {
+            return;
+        }
         const trimmedKey = elements.apiKeyInput.value.trim();
         state.providerApiKeys[state.selectedProvider] = trimmedKey;
         if (!trimmedKey) {
@@ -193,9 +197,23 @@ function selectProvider(providerId, state, elements, { userInitiated = false } =
 
 function updateApiKeyUI(elements, state) {
     const provider = getProviderMeta(state.selectedProvider);
-    elements.apiKeyInput.value = state.providerApiKeys[state.selectedProvider] || '';
-    elements.apiKeyInput.placeholder = `e.g., ${provider.placeholderKey}`;
-    elements.apiHelper.innerHTML = `Get a ${provider.shortName} key at <a href="${provider.docsUrl}" target="_blank">${provider.docsUrl}</a>`;
+    const requiresApiKey = providerRequiresApiKey(provider);
+
+    elements.apiKeyInput.disabled = !requiresApiKey;
+    elements.apiKeyInput.value = requiresApiKey
+        ? state.providerApiKeys[state.selectedProvider] || ''
+        : '';
+    elements.apiKeyInput.placeholder = requiresApiKey
+        ? `e.g., ${provider.placeholderKey}`
+        : provider.placeholderKey || 'No API key required';
+
+    elements.testButton.textContent = requiresApiKey ? 'Test Key' : 'Test Connection';
+
+    if (requiresApiKey) {
+        elements.apiHelper.innerHTML = `Get a ${provider.shortName} key at <a href="${provider.docsUrl}" target="_blank">${provider.docsUrl}</a>`;
+    } else {
+        elements.apiHelper.innerHTML = `${provider.shortName} uses account sign-in instead of API keys. Learn more at <a href="${provider.docsUrl}" target="_blank">${provider.docsUrl}</a>`;
+    }
 }
 
 function populateModelSelect(elements, state) {
@@ -236,8 +254,9 @@ function populateModelSelect(elements, state) {
 async function refreshModels(state, elements, silent, providerIdOverride = null) {
     const providerId = providerIdOverride || state.selectedProvider;
     const provider = getProviderMeta(providerId);
+    const requiresApiKey = providerRequiresApiKey(provider);
     const apiKey = (state.providerApiKeys[providerId] || '').trim();
-    if (!apiKey) {
+    if (requiresApiKey && !apiKey) {
         if (!silent && providerId === state.selectedProvider) {
             showStatus(elements.status, `Enter your ${provider.shortName} API key first.`, 'error');
         }
@@ -278,25 +297,36 @@ async function refreshModels(state, elements, silent, providerIdOverride = null)
 
 async function testApiKey(state, elements) {
     const provider = getProviderMeta(state.selectedProvider);
+    const requiresApiKey = providerRequiresApiKey(provider);
     const apiKey = (state.providerApiKeys[state.selectedProvider] || '').trim();
-    if (!apiKey) {
+    if (requiresApiKey && !apiKey) {
         showStatus(elements.status, `Enter your ${provider.shortName} API key first.`, 'error');
         return false;
     }
 
-    showStatus(elements.status, `Testing ${provider.shortName} key...`, 'info');
+    showStatus(
+        elements.status,
+        requiresApiKey
+            ? `Testing ${provider.shortName} key...`
+            : `Testing ${provider.shortName} connection...`,
+        'info'
+    );
 
     try {
         const models = await provider.fetchModels(apiKey);
         showStatus(
             elements.status,
-            `API key validated. ${models.length} models accessible for ${provider.shortName}.`,
+            `${requiresApiKey ? 'API key validated' : 'Connection validated'}. ${models.length} models accessible for ${provider.shortName}.`,
             'success'
         );
-        elements.testButton.textContent = 'Key Validated ✓';
+        elements.testButton.textContent = requiresApiKey
+            ? 'Key Validated ✓'
+            : 'Connection Validated ✓';
         elements.testButton.classList.add('validated');
         setTimeout(() => {
-            elements.testButton.textContent = 'Test Key';
+            elements.testButton.textContent = providerRequiresApiKey(provider)
+                ? 'Test Key'
+                : 'Test Connection';
             elements.testButton.classList.remove('validated');
         }, 3000);
         return true;
@@ -362,6 +392,10 @@ function scheduleModelAutoRefresh(state, elements) {
     }
 
     const providerId = state.selectedProvider;
+    const provider = getProviderMeta(providerId);
+    if (!providerRequiresApiKey(provider)) {
+        return;
+    }
     const apiKey = (state.providerApiKeys[providerId] || '').trim();
     if (!apiKey) {
         return;
@@ -408,8 +442,9 @@ function indicateAutoSaved(state, elements) {
 
 function buildPayload(state, elements, { requireApiKey = true } = {}) {
     const provider = getProviderMeta(state.selectedProvider);
+    const requiresApiKey = providerRequiresApiKey(provider);
     const apiKey = (state.providerApiKeys[state.selectedProvider] || '').trim();
-    if (requireApiKey && !apiKey) {
+    if (requireApiKey && requiresApiKey && !apiKey) {
         showStatus(
             elements.status,
             `Add your ${provider.shortName} API key before saving.`,
@@ -518,4 +553,8 @@ function formatModelLabel(id) {
         .replace(/\s+/g, ' ')
         .replace(/\b\w/g, (char) => char.toUpperCase())
         .trim();
+}
+
+function providerRequiresApiKey(provider) {
+    return provider?.requiresApiKey !== false;
 }

@@ -120,7 +120,7 @@ function createInjectAIAnalysisButton({
             } catch (error) {
                 console.error('Analysis error:', error);
                 if (error.message.includes('API key not configured')) {
-                    alert('Please configure your Gemini API key in the extension settings.');
+                    alert('Please configure your selected provider in the extension settings.');
                 } else {
                     console.error('❌ Analysis failed:', error.message);
                     const errorEstimation = {
@@ -165,7 +165,7 @@ function handleAnalyzerInitError(error) {
     }
 
     if (error.code === 'missing-api-key' || error.message?.includes('API key not configured')) {
-        alert('Please configure your Gemini API key in the extension settings first.');
+        alert('Please configure your selected provider in the extension settings first.');
         return;
     }
 
