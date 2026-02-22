@@ -17,6 +17,7 @@ function cacheElements() {
         providerGrid: document.getElementById('provider-grid'),
         apiKeyInput: document.getElementById('api-key'),
         apiHelper: document.getElementById('api-helper'),
+        resetPuterAuthButton: document.getElementById('reset-puter-auth'),
         modelSelect: document.getElementById('model-select'),
         maxImagesInput: document.getElementById('max-images'),
         maxImagesField: document.getElementById('max-images-field'),
@@ -29,7 +30,7 @@ function cacheElements() {
 
 function createInitialState() {
     return {
-        selectedProvider: 'gemini',
+        selectedProvider: 'puter',
         providerApiKeys: {},
         providerModelSelections: {},
         providerModels: {},
@@ -90,6 +91,14 @@ function bindEvents(elements, state) {
         await withBusyButton(elements.testButton, async () => testApiKey(state, elements));
     });
 
+    if (elements.resetPuterAuthButton) {
+        elements.resetPuterAuthButton.addEventListener('click', async () => {
+            await withBusyButton(elements.resetPuterAuthButton, async () =>
+                resetPuterAuth(state, elements)
+            );
+        });
+    }
+
     elements.maxImagesInput.addEventListener('change', () => {
         state.maxImages = Number(elements.maxImagesInput.value);
         maybeScheduleAutoSave(state, elements);
@@ -129,7 +138,7 @@ function loadSettings(elements, state) {
             return;
         }
 
-        state.selectedProvider = result.aiProvider || 'gemini';
+        state.selectedProvider = result.aiProvider || 'puter';
         state.providerApiKeys = {
             ...(result.providerApiKeys || {})
         };
@@ -213,6 +222,70 @@ function updateApiKeyUI(elements, state) {
         elements.apiHelper.innerHTML = `Get a ${provider.shortName} key at <a href="${provider.docsUrl}" target="_blank">${provider.docsUrl}</a>`;
     } else {
         elements.apiHelper.innerHTML = `${provider.shortName} uses account sign-in instead of API keys. Learn more at <a href="${provider.docsUrl}" target="_blank">${provider.docsUrl}</a>`;
+    }
+
+    if (elements.resetPuterAuthButton) {
+        elements.resetPuterAuthButton.hidden = provider.id !== 'puter';
+    }
+}
+
+async function resetPuterAuth(_state, elements) {
+    showStatus(elements.status, 'Resetting Puter authentication data...', 'info');
+
+    try {
+        localStorage.removeItem('puter.auth.token');
+        sessionStorage.removeItem('puter.auth.token');
+    } catch (error) {
+        console.warn('Unable to clear local/session Puter token on settings page:', error);
+    }
+
+    if (!chrome.browsingData || typeof chrome.browsingData.remove !== 'function') {
+        showStatus(
+            elements.status,
+            'Puter auth reset partially completed. Please clear puter.com site data manually.',
+            'error'
+        );
+        return;
+    }
+
+    try {
+        await new Promise((resolve, reject) => {
+            chrome.browsingData.remove(
+                {
+                    origins: [
+                        'https://puter.com',
+                        'https://api.puter.com',
+                        'https://www.kleinanzeigen.de'
+                    ]
+                },
+                {
+                    cookies: true,
+                    localStorage: true,
+                    indexedDB: true,
+                    cacheStorage: true,
+                    serviceWorkers: true
+                },
+                () => {
+                    if (chrome.runtime.lastError) {
+                        reject(new Error(chrome.runtime.lastError.message));
+                        return;
+                    }
+                    resolve();
+                }
+            );
+        });
+
+        showStatus(
+            elements.status,
+            'Puter auth reset complete. Run Analyze again to sign in as a new user.',
+            'success'
+        );
+    } catch (error) {
+        showStatus(
+            elements.status,
+            `Failed to fully reset Puter auth: ${error.message}`,
+            'error'
+        );
     }
 }
 

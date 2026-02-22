@@ -215,11 +215,55 @@ function formatEuro(amount, options = {}) {
 }
 
 async function loadApiKeyStatus() {
-    const result = await chrome.storage.local.get(['geminiApiKey']);
+    const result = await chrome.storage.local.get([
+        'aiProvider',
+        'providerApiKeys',
+        'providerModelSelections',
+        'modelName',
+        'geminiApiKey'
+    ]);
     const statusElement = document.getElementById('api-key-status');
     if (statusElement) {
-        statusElement.textContent = result.geminiApiKey ? '✅ Configured' : '❌ Not configured';
-        statusElement.style.color = result.geminiApiKey ? '#28a745' : '#dc3545';
+        const providerId = result.aiProvider || 'puter';
+        const providerNames = {
+            gemini: 'Gemini',
+            openai: 'OpenAI',
+            anthropic: 'Claude',
+            puter: 'Puter.js'
+        };
+        const providerDefaults = {
+            gemini: 'gemini-2.5-flash',
+            openai: 'gpt-4.1-mini',
+            anthropic: 'claude-3-5-sonnet-20241022',
+            puter: 'gpt-5-nano'
+        };
+
+        const providerApiKeys = result.providerApiKeys || {};
+        const providerModelSelections = result.providerModelSelections || {};
+        const model =
+            providerModelSelections[providerId] ||
+            result.modelName ||
+            providerDefaults[providerId] ||
+            'unknown-model';
+
+        const requiresApiKey = providerId !== 'puter';
+        const providerKey = providerApiKeys[providerId] || (providerId === 'gemini' ? result.geminiApiKey : '');
+        const providerName = providerNames[providerId] || providerId;
+
+        if (!requiresApiKey) {
+            statusElement.textContent = `✅ ${providerName} · ${model} (No API key required)`;
+            statusElement.style.color = '#28a745';
+            return;
+        }
+
+        if (providerKey) {
+            statusElement.textContent = `✅ ${providerName} · ${model} (API key configured)`;
+            statusElement.style.color = '#28a745';
+            return;
+        }
+
+        statusElement.textContent = `❌ ${providerName} · ${model} (API key missing)`;
+        statusElement.style.color = '#dc3545';
     }
 }
 

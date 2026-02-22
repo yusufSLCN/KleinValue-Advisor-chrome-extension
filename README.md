@@ -16,6 +16,7 @@ AI-powered Chrome extension for analyzing Kleinanzeigen listings with Google Gem
 ## Highlights
 
 - **Multi-provider AI studio:** Hot-swap between Gemini, GPT-4o/4.1, Claude, and Puter.js with dedicated provider configuration and live catalog fetching.
+- **Puter.js no-key option:** Puter.js does not require provider API keys, includes a free usage quota, and can route requests to models from multiple providers.
 - **Vision-first valuations:** Pulls listing images, runs multimodal prompts, and surfaces structured price, confidence, and reasoning.
 - **Search & dashboard integration:** Shows cached AI estimates inline on Kleinanzeigen search results and in an analytics dashboard with filters and stats.
 - **Cost & transparency:** Displays provider costs, token usage, and confidence for every run so users know when to trust or renegotiate.
@@ -46,7 +47,7 @@ Prefer installing directly? Grab the published build from the [Chrome Web Store 
 
 ## Configuration
 
-All provider keys are entered and stored inside the extension settings UI. There is no `.env` file to maintain because the extension never reads environment variables at runtime; keep secrets in your browser profile or a secrets manager for CI packaging.
+Provider keys (Gemini/OpenAI/Anthropic) are entered and stored inside the extension settings UI. Puter.js is account-based (no API key required) and offers a free usage quota while exposing models from multiple providers. There is no `.env` file to maintain because the extension never reads environment variables at runtime; keep secrets in your browser profile or a secrets manager for CI packaging.
 
 ### Code Layout
 

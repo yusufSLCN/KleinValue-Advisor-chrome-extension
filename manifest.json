@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "KleinValue Advisor",
-    "version": "1.1",
+    "version": "1.2",
     "description": "KleinValue Advisor delivers AI-powered item analysis for Kleinanzeigen",
 
     "icons": {
@@ -10,7 +10,7 @@
         "128": "icons/icon128.png"
     },
 
-    "permissions": ["storage"],
+    "permissions": ["storage", "browsingData"],
 
     "host_permissions": [
         "https://www.kleinanzeigen.de/*",
